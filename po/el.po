@@ -12,9 +12,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PackageKit\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-11-27 14:52+0000\n"
-"PO-Revision-Date: 2015-11-27 14:52+0000\n"
-"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
+"POT-Creation-Date: 2018-02-19 12:41+0100\n"
+"PO-Revision-Date: 2018-02-19 11:42+0000\n"
+"Last-Translator: kalev <kalevlember@gmail.com>\n"
 "Language-Team: Greek (http://www.transifex.com/freedesktop/packagekit/language/el/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -330,7 +330,7 @@ msgstr "Κανένα πακέτο δεν χρειάζεται ενημέρωση
 #. TRANSLATORS: There was an error getting the
 #. * details about the package. The detailed error follows
 #. TRANSLATORS: The package name was not found in
-#. * any software sources. The detailed error follows
+#. * any software repositories. The detailed error follows
 #, c-format
 msgid "This tool could not find all the packages: %s"
 msgstr "Το εργαλείο δεν μπόρεσε να βρει όλα τα πακέτα: %s"
@@ -509,16 +509,6 @@ msgstr "Πρέπει να οριστεί συμβολοσειρά με το τι
 msgid "A filename is required"
 msgstr "Πρέπει να οριστεί ένα όνομα αρχείου"
 
-#. TRANSLATORS: The user did not
-#. * provide a distro name
-msgid "A distribution name is required"
-msgstr ""
-
-#. TRANSLATORS: The user did not
-#. * provide an upgrade type
-msgid "An upgrade type is required, e.g. 'minimal', 'default' or 'complete'"
-msgstr ""
-
 #. TRANSLATORS: this is the description of the backend
 msgid "Description"
 msgstr "Περιγραφή"
@@ -559,7 +549,12 @@ msgid "PackageKit Monitor"
 msgstr "Παρακολούθηση PackageKit"
 
 #. TRANSLATORS: this is the message we send plymouth to
-#. * advise of the new percentage completion
+#. * advise of the new percentage completion when installing system upgrades
+msgid "Installing System Upgrade"
+msgstr ""
+
+#. TRANSLATORS: this is the message we send plymouth to
+#. * advise of the new percentage completion when installing updates
 msgid "Installing Updates"
 msgstr "Εγκατάσταση ενημερώσεων"
 
@@ -575,53 +570,13 @@ msgstr "Τερματισμός λειτουργίας μετά την εγκατ
 msgid "Installing updates; this could take a while..."
 msgstr "Εγκατάσταση ενημερώσεων, αυτό θα μπορούσε να πάρει λίγο χρόνο..."
 
-#. TRANSLATORS: when we are getting data from the daemon
-msgid "Getting package information..."
-msgstr "Λήψη πληροφοριών πακέτου..."
-
-#. TRANSLATORS: run an applicaiton
-#, c-format
-msgid "Run %s"
-msgstr "Εκτέλεση %s"
-
-#. TRANSLATORS: show the installed version of a package
-msgid "Installed version"
-msgstr "Εγκατεστημένη έκδοση"
-
-#. TRANSLATORS: run the application now
-#, c-format
-msgid "Run version %s now"
-msgstr "Εκτέλεση της έκδοσης %s τώρα"
-
-#. TRANSLATORS: run the application now
-msgid "Run now"
-msgstr "Εκτέλεση τώρα"
-
-#. TRANSLATORS: update to a new version of the package
-#, c-format
-msgid "Update to version %s"
-msgstr "Εγκατάσταση της ενημερωμένης έκδοσης %s"
-
-#. TRANSLATORS: To install a package
-#, c-format
-msgid "Install %s now"
-msgstr "Εγκατάσταση %s τώρα"
-
-#. TRANSLATORS: the version of the package
-msgid "Version"
-msgstr "Έκδοση"
-
-#. TRANSLATORS: noting found, so can't install
-msgid "No packages found for your system"
-msgstr "Δε βρέθηκαν πακέτα για το σύστημά σας"
-
-#. TRANSLATORS: package is being installed
-msgid "Installing..."
-msgstr "Εγκατάσταση..."
+#. TRANSLATORS: we've started doing offline system upgrade
+msgid "Installing system upgrade; this could take a while..."
+msgstr ""
 
 #. TRANSLATORS: downloading repo data so we can search
-msgid "Downloading details about the software sources."
-msgstr "Λήψη λεπτομερειών σχετικά με τις πηγές λογισμικού."
+msgid "Downloading details about the software repositories."
+msgstr ""
 
 #. TRANSLATORS: downloading file lists so we can search
 msgid "Downloading filelists (this may take some time to complete)."
@@ -858,6 +813,11 @@ msgstr "Έλεγχος βιβλιοθηκών σε χρήση"
 msgid "Copying files"
 msgstr "Αντιγραφή αρχείων"
 
+#. TRANSLATORS: transaction state, we are running hooks before or after the
+#. transaction
+msgid "Running hooks"
+msgstr ""
+
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"
 msgstr "Προβολή πληροφοριών αποσφαλμάτωσης για όλα τα αρχεία"
@@ -885,8 +845,8 @@ msgid "Security"
 msgstr "Ασφαλείας"
 
 #. TRANSLATORS: The type of update
-msgid "Bug fix "
-msgstr "Διορθώσεως σφαλμάτων"
+msgid "Bug fix"
+msgstr ""
 
 #. TRANSLATORS: The type of update
 msgid "Enhancement"
@@ -1020,8 +980,8 @@ msgid "Getting repositories"
 msgstr "Λήψη αποθετηρίων"
 
 #. TRANSLATORS: The role of the transaction, in present tense
-msgid "Enabling repository"
-msgstr "Ενεργοποίηση του αποθετηρίου"
+msgid "Modifying repository"
+msgstr ""
 
 #. TRANSLATORS: The role of the transaction, in present tense
 msgid "Setting data"
@@ -1066,6 +1026,10 @@ msgstr "Λήψη κατηγοριών"
 #. TRANSLATORS: The role of the transaction, in present tense
 msgid "Getting transactions"
 msgstr "Λήψη εργασιών"
+
+#. TRANSLATORS: The role of the transaction, in present tense
+msgid "Getting system upgrades"
+msgstr ""
 
 #. TRANSLATORS: ask the user if they are comfortable installing insecure
 #. packages
@@ -1173,6 +1137,10 @@ msgstr "Τα παρακάτω πακέτα πρέπει να εγκαταστα�
 #. TRANSLATORS: When processing, we might have to downgrade other dependencies
 msgid "The following packages have to be downgraded:"
 msgstr "Τα ακόλουθα πακέτα θα πρέπει να υποβαθμιστούν:"
+
+#. TRANSLATORS: When processing, we might have to obsolete other dependencies
+msgid "The following packages have to be obsoleted:"
+msgstr ""
 
 #. TRANSLATORS: When processing, untrusted and non-verified packages may be
 #. encountered
@@ -1297,22 +1265,22 @@ msgstr "Απαιτείται πιστοποίηση για την ενημέρω
 
 #. SECURITY:
 #. - Normal users require admin authentication to enable or disable
-#. software sources as this can be used to enable new updates or
+#. software repositories as this can be used to enable new updates or
 #. install different versions of software.
-msgid "Change software source parameters"
-msgstr "Αλλαγή παραμέτρων πηγών λογισμικού"
+msgid "Change software repository parameters"
+msgstr ""
 
-msgid "Authentication is required to change software source parameters"
-msgstr "Απαιτείται πιστοποίηση για την αλλαγή των παραμέτρων των πηγών λογισμικού"
+msgid "Authentication is required to change software repository parameters"
+msgstr ""
 
 #. SECURITY:
 #. - Normal users do not require admin authentication to refresh the
 #. cache, as this doesn't actually install or remove software.
-msgid "Refresh system sources"
-msgstr "Ανανέωση πηγών συστήματος"
+msgid "Refresh system repositories"
+msgstr ""
 
-msgid "Authentication is required to refresh the system sources"
-msgstr "Απαιτείται πιστοποίηση για την ανανέωση των πηγών του συστήματος"
+msgid "Authentication is required to refresh the system repositories"
+msgstr ""
 
 #. SECURITY:
 #. - Normal users do not require admin authentication to set the proxy
@@ -1358,8 +1326,9 @@ msgid "Authentication is required to repair the installed software"
 msgstr "Απαιτείται πιστοποίηση για την επιδιόρθωση του εγκατεστημένου λογισμικού"
 
 #. SECURITY:
-#. - Normal users are able to ask updates to be installed at
-#. early boot time without a password.
+#. - Normal users require admin authentication to upgrade the system
+#. to a new distribution since this can make the system unbootable or
+#. stop other applications from working.
 msgid "Trigger offline updates"
 msgstr "Ενεργοποίηση ενημερώσεων εκτός σύνδεσης"
 

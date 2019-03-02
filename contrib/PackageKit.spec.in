@@ -13,28 +13,19 @@ Requires: shared-mime-info
 Requires: comps-extras
 Requires: systemd
 
-BuildRequires: glib2-devel >= 2.32.0
-BuildRequires: dbus-devel  >= 1.1.1
-BuildRequires: dbus-glib-devel >= 0.74
-BuildRequires: pam-devel
-BuildRequires: libX11-devel
+BuildRequires: glib2-devel >= 2.46.0
 BuildRequires: xmlto
 BuildRequires: gtk-doc
-BuildRequires: gcc-c++
 BuildRequires: sqlite-devel
-BuildRequires: NetworkManager-devel
 BuildRequires: polkit-devel >= 0.92
 BuildRequires: libtool
 BuildRequires: gtk2-devel
 BuildRequires: gtk3-devel
 BuildRequires: docbook-utils
 BuildRequires: gnome-doc-utils
-BuildRequires: perl(XML::Parser)
 BuildRequires: intltool
 BuildRequires: gettext
-BuildRequires: libgudev1-devel
-BuildRequires: xulrunner-devel
-BuildRequires: libarchive-devel
+BuildRequires: vala-tools
 BuildRequires: gstreamer1-devel
 BuildRequires: gstreamer1-plugins-base-devel
 BuildRequires: pango-devel
@@ -46,12 +37,11 @@ BuildRequires: bash-completion
 %endif
 
 %if !0%{?rhel}
-BuildRequires: hawkey-devel >= 0.4.6
 BuildRequires: rpm-devel >= 4.11.0
 BuildRequires: libappstream-glib-devel
 BuildRequires: librepo-devel >= 1.1.5
 BuildRequires: libsolv-devel
-BuildRequires: libhif-devel >= 0.1.6
+BuildRequires: libdnf-devel >= 0.7.0
 %endif
 
 # functionality moved to udev itself
@@ -60,6 +50,7 @@ Obsoletes: udev-packagekit < %{version}-%{release}
 
 # No more GTK+-2 plugin
 Obsoletes: PackageKit-gtk-module < %{version}-%{release}
+Obsoletes: PackageKit-browser-plugin < %{version}-%{release}
 
 # No more zif, smart or yum in Fedora
 Obsoletes: PackageKit-smart < %{version}-%{release}
@@ -111,17 +102,6 @@ Provides: PackageKit-docs = %{version}-%{release}
 %description glib-devel
 GLib headers and libraries for PackageKit.
 
-%package browser-plugin
-Summary: Browser Plugin for PackageKit
-Requires: gtk2
-Requires: %{name}-glib%{?_isa} = %{version}-%{release}
-Requires: mozilla-filesystem
-
-%description browser-plugin
-The PackageKit browser plugin allows web sites to offer the ability to
-users to install and update packages from configured repositories
-using PackageKit.
-
 %package gstreamer-plugin
 Summary: Install GStreamer codecs using PackageKit
 Requires: %{name}-glib%{?_isa} = %{version}-%{release}
@@ -157,7 +137,7 @@ using PackageKit.
 %configure \
         --disable-static \
 %if 0%{?rhel} == 0
-        --enable-hif \
+        --enable-dnf \
         --enable-introspection \
         --enable-bash-completion \
 %else
@@ -240,7 +220,7 @@ popd > /dev/null
 %{_unitdir}/system-update.target.wants/
 %{_libexecdir}/pk-*offline-update
 %if 0%{?rhel} == 0
-%{_libdir}/packagekit-backend/libpk_backend_hif.so
+%{_libdir}/packagekit-backend/libpk_backend_dnf.so
 %endif
 
 %files glib
@@ -250,9 +230,6 @@ popd > /dev/null
 %files cron
 %config %{_sysconfdir}/cron.daily/packagekit-background.cron
 %config(noreplace) %{_sysconfdir}/sysconfig/packagekit-background
-
-%files browser-plugin
-%{_libdir}/mozilla/plugins/packagekit-plugin.so
 
 %files gstreamer-plugin
 %{_libexecdir}/pk-gstreamer-install

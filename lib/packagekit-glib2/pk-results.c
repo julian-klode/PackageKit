@@ -79,7 +79,7 @@ enum {
 
 G_DEFINE_TYPE (PkResults, pk_results, G_TYPE_OBJECT)
 
-/**
+/*
  * pk_results_get_property:
  **/
 static void
@@ -107,7 +107,7 @@ pk_results_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
 	}
 }
 
-/**
+/*
  * pk_results_set_property:
  **/
 static void
@@ -135,6 +135,28 @@ pk_results_set_property (GObject *object, guint prop_id, const GValue *value, GP
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
 	}
+}
+
+/**
+ * pk_results_set_role:
+ * @results: a valid #PkResults instance
+ * @role: the role enum
+ *
+ * Sets the results object to have the given role enum.
+ *
+ * Return value: %TRUE if the value was set
+ *
+ * Since: 1.1.8
+ **/
+gboolean
+pk_results_set_role (PkResults *results, PkRoleEnum role)
+{
+	g_return_val_if_fail (PK_IS_RESULTS (results), FALSE);
+	g_return_val_if_fail (role != PK_ROLE_ENUM_UNKNOWN, FALSE);
+
+	results->priv->role = role;
+
+	return TRUE;
 }
 
 /**
@@ -504,7 +526,7 @@ pk_results_get_role (PkResults *results)
  *
  * Gets the transaction flag for these results.
  *
- * Return value: The #PkBitfield or 0 if not set
+ * Return value: a #PkBitfield containing #PkTransactionFlagEnum 0 if not set
  *
  * Since: 0.8.1
  **/
@@ -552,7 +574,6 @@ pk_results_get_error_code (PkResults *results)
  *
  * Since: 0.5.2
  **/
-
 GPtrArray *
 pk_results_get_package_array (PkResults *results)
 {
@@ -804,7 +825,7 @@ pk_results_get_repo_detail_array (PkResults *results)
 	return g_ptr_array_ref (results->priv->repo_detail_array);
 }
 
-/**
+/*
  * pk_results_class_init:
  **/
 static void
@@ -818,7 +839,9 @@ pk_results_class_init (PkResultsClass *klass)
 
 	/**
 	 * PkResults:role:
-	 *
+         *
+         * The #PkRoleEnum or %PK_ROLE_ENUM_UNKNOWN if not set
+         *
 	 * Since: 0.5.2
 	 */
 	pspec = g_param_spec_enum ("role", NULL, NULL,
@@ -829,6 +852,8 @@ pk_results_class_init (PkResultsClass *klass)
 	/**
 	 * PkResults:transaction-flags:
 	 *
+         * A #PkBitfield containing #PkTransactionFlagEnum for this result.
+         *
 	 * Since: 0.8.1
 	 */
 	pspec = g_param_spec_uint64 ("transaction-flags", NULL, NULL,
@@ -860,7 +885,7 @@ pk_results_class_init (PkResultsClass *klass)
 	g_object_class_install_property (object_class, PROP_PROGRESS, pspec);
 }
 
-/**
+/*
  * pk_results_init:
  **/
 static void
@@ -886,7 +911,7 @@ pk_results_init (PkResults *results)
 	results->priv->repo_detail_array = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 }
 
-/**
+/*
  * pk_results_finalize:
  **/
 static void
@@ -918,7 +943,7 @@ pk_results_finalize (GObject *object)
 /**
  * pk_results_new:
  *
- * Return value: a new PkResults object.
+ * Return value: a new #PkResults object.
  *
  * Since: 0.5.2
  **/

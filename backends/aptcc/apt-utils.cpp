@@ -26,6 +26,7 @@
 #include <glib/gstdio.h>
 
 #include <fstream>
+#include <regex>
 
 PkGroupEnum get_enum_group(string group)
 {
@@ -57,6 +58,10 @@ PkGroupEnum get_enum_group(string group)
         return PK_GROUP_ENUM_COMMUNICATION;
     } else if (group.compare ("interpreters") == 0) {
         return PK_GROUP_ENUM_PROGRAMMING;
+    } else if (group.compare ("java") == 0) {
+        return PK_GROUP_ENUM_PROGRAMMING;
+    } else if (group.compare ("javascript") == 0) {
+        return PK_GROUP_ENUM_PROGRAMMING;
     } else if (group.compare ("kde") == 0) {
         return PK_GROUP_ENUM_DESKTOP_KDE;
     } else if (group.compare ("libdevel") == 0) {
@@ -80,6 +85,10 @@ PkGroupEnum get_enum_group(string group)
     } else if (group.compare ("perl") == 0) {
         return PK_GROUP_ENUM_PROGRAMMING;
     } else if (group.compare ("python") == 0) {
+        return PK_GROUP_ENUM_PROGRAMMING;
+    } else if (group.compare ("ruby") == 0) {
+        return PK_GROUP_ENUM_PROGRAMMING;
+    } else if (group.compare ("rust") == 0) {
         return PK_GROUP_ENUM_PROGRAMMING;
     } else if (group.compare ("science") == 0) {
         return PK_GROUP_ENUM_SCIENCE;
@@ -354,24 +363,57 @@ bool utilRestartRequired(const string &packageName)
     return false;
 }
 
+string utilBuildPackageOriginId(pkgCache::VerFileIterator vf)
+{
+    if (vf.File().Origin() == NULL)
+        return string("local");
+    if (vf.File().Archive() == NULL)
+        return string("local");
+    if (vf.File().Component() == NULL)
+        return string("invalid");
+
+    // https://wiki.debian.org/DebianRepository/Format
+    // Optional field indicating the origin of the repository, a single line of free form text.
+    // e.g. "Debian" or "Google Inc."
+    auto origin = string(vf.File().Origin());
+    // The Suite field may describe the suite. A suite is a single word.
+    // e.g. "jessie" or "sid"
+    auto suite = string(vf.File().Archive());
+    // An area within the repository. May be prefixed by parts of the path
+    // following the directory beneath dists.
+    // e.g. "main" or "non-free"
+    // NOTE: this may need the slash stripped, currently having a slash doesn't
+    //    seem a problem though. we'll allow them until otherwise indicated
+    auto component = string(vf.File().Component());
+
+    // Origin is defined as 'a single line of free form text'.
+    // Sanitize it!
+    // All space characters, control characters and punctuation get replaced
+    // with underscore.
+    // In particular the punctuations ',' and ';' may be used as list separators
+    // so we must not have them appear in our package_ids as that would break
+    // any number of higher level features.
+    std::transform(origin.begin(), origin.end(), origin.begin(), ::tolower);
+    origin = std::regex_replace(origin, std::regex("[[:space:][:cntrl:][:punct:]]+"), "_");
+
+    string res = origin + "-" + suite + "-" + component;
+    return res;
+}
+
 gchar* utilBuildPackageId(const pkgCache::VerIterator &ver)
 {
     gchar *package_id;
     pkgCache::VerFileIterator vf = ver.FileList();
 
-    string data;
+    string data = "";
     const pkgCache::PkgIterator &pkg = ver.ParentPkg();
-    if (pkg->CurrentState == pkgCache::State::Installed &&
-            pkg.CurrentVer() == ver) {
-        if (vf.File().Archive() == NULL) {
-            data = "installed";
-        } else {
-            data += vf.File().Archive();
-        }
-    } else if (vf.File().Archive() != NULL) {
-        data = vf.File().Archive();
+    if (pkg->CurrentState == pkgCache::State::Installed && pkg.CurrentVer() == ver) {
+        // when a package is installed, the data part of a package-id is "installed:<repo-id>"
+        data = "installed:" + utilBuildPackageOriginId(vf);
+    } else {
+        data = utilBuildPackageOriginId(vf);
     }
-    
+
     package_id = pk_package_id_build(ver.ParentPkg().Name(),
                                      ver.VerStr(),
                                      ver.Arch(),

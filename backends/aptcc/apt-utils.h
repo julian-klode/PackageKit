@@ -1,7 +1,7 @@
 /* apt-utils.h
  *
  * Copyright (c) 2001, 2005 Daniel Burrows (aptitude)
- * Copyright (c) 2009 Daniel Nicoletti <dantti12@gmail.com>
+ * Copyright (c) 2009-2016 Daniel Nicoletti <dantti12@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,6 @@
 
 #include <apt-pkg/acquire.h>
 #include <apt-pkg/pkgrecords.h>
-#include <glib.h>
 #include <pk-backend.h>
 
 #include "apt-cache-file.h"
@@ -77,6 +76,12 @@ bool utilRestartRequired(const string &packageName);
   * The caller must g_free the returned value
   */
 gchar* utilBuildPackageId(const pkgCache::VerIterator &ver);
+
+/**
+ * Build a unique repository origin, in the form of
+ * {distro}-{suite}-{component}
+ */
+string utilBuildPackageOriginId(pkgCache::VerFileIterator vf);
 
 /**
   * Return an utf8 string

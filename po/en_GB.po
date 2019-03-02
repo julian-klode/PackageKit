@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# Andi Chandler <andi@gowling.com>, 2014-2015
+# Andi Chandler <andi@gowling.com>, 2014-2017
 # Bruce Cowan <bruce@bcowan.me.uk>, 2012-2013
 # Chris  Leonard <cjl@laptop.org>, 2012
 # Richard Hughes <richard@hughsie.com>, 2011
@@ -12,9 +12,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PackageKit\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-11-27 14:52+0000\n"
-"PO-Revision-Date: 2015-11-27 14:52+0000\n"
-"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
+"POT-Creation-Date: 2018-02-19 12:41+0100\n"
+"PO-Revision-Date: 2018-02-19 11:42+0000\n"
+"Last-Translator: kalev <kalevlember@gmail.com>\n"
 "Language-Team: English (United Kingdom) (http://www.transifex.com/freedesktop/packagekit/language/en_GB/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -330,7 +330,7 @@ msgstr "No packages require updating to newer versions."
 #. TRANSLATORS: There was an error getting the
 #. * details about the package. The detailed error follows
 #. TRANSLATORS: The package name was not found in
-#. * any software sources. The detailed error follows
+#. * any software repositories. The detailed error follows
 #, c-format
 msgid "This tool could not find all the packages: %s"
 msgstr "This tool could not find all the packages: %s"
@@ -509,16 +509,6 @@ msgstr "A package provide string is required"
 msgid "A filename is required"
 msgstr "A filename is required"
 
-#. TRANSLATORS: The user did not
-#. * provide a distro name
-msgid "A distribution name is required"
-msgstr ""
-
-#. TRANSLATORS: The user did not
-#. * provide an upgrade type
-msgid "An upgrade type is required, e.g. 'minimal', 'default' or 'complete'"
-msgstr ""
-
 #. TRANSLATORS: this is the description of the backend
 msgid "Description"
 msgstr "Description"
@@ -559,7 +549,12 @@ msgid "PackageKit Monitor"
 msgstr "PackageKit Monitor"
 
 #. TRANSLATORS: this is the message we send plymouth to
-#. * advise of the new percentage completion
+#. * advise of the new percentage completion when installing system upgrades
+msgid "Installing System Upgrade"
+msgstr "Installing System Upgrade"
+
+#. TRANSLATORS: this is the message we send plymouth to
+#. * advise of the new percentage completion when installing updates
 msgid "Installing Updates"
 msgstr "Installing Updates"
 
@@ -575,53 +570,13 @@ msgstr "Shutting down after installing updates…"
 msgid "Installing updates; this could take a while..."
 msgstr "Installing updates; this could take a while..."
 
-#. TRANSLATORS: when we are getting data from the daemon
-msgid "Getting package information..."
-msgstr "Getting package information..."
-
-#. TRANSLATORS: run an applicaiton
-#, c-format
-msgid "Run %s"
-msgstr "Run %s"
-
-#. TRANSLATORS: show the installed version of a package
-msgid "Installed version"
-msgstr "Installed version"
-
-#. TRANSLATORS: run the application now
-#, c-format
-msgid "Run version %s now"
-msgstr "Run version %s now"
-
-#. TRANSLATORS: run the application now
-msgid "Run now"
-msgstr "Run now"
-
-#. TRANSLATORS: update to a new version of the package
-#, c-format
-msgid "Update to version %s"
-msgstr "Update to version %s"
-
-#. TRANSLATORS: To install a package
-#, c-format
-msgid "Install %s now"
-msgstr "Install %s now"
-
-#. TRANSLATORS: the version of the package
-msgid "Version"
-msgstr "Version"
-
-#. TRANSLATORS: noting found, so can't install
-msgid "No packages found for your system"
-msgstr "No packages found for your system"
-
-#. TRANSLATORS: package is being installed
-msgid "Installing..."
-msgstr "Installing..."
+#. TRANSLATORS: we've started doing offline system upgrade
+msgid "Installing system upgrade; this could take a while..."
+msgstr "Installing system upgrade; this could take a while..."
 
 #. TRANSLATORS: downloading repo data so we can search
-msgid "Downloading details about the software sources."
-msgstr "Downloading details about the software sources."
+msgid "Downloading details about the software repositories."
+msgstr ""
 
 #. TRANSLATORS: downloading file lists so we can search
 msgid "Downloading filelists (this may take some time to complete)."
@@ -858,6 +813,11 @@ msgstr "Checking libraries in use"
 msgid "Copying files"
 msgstr "Copying files"
 
+#. TRANSLATORS: transaction state, we are running hooks before or after the
+#. transaction
+msgid "Running hooks"
+msgstr "Running hooks"
+
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"
 msgstr "Show debugging information for all files"
@@ -885,8 +845,8 @@ msgid "Security"
 msgstr "Security"
 
 #. TRANSLATORS: The type of update
-msgid "Bug fix "
-msgstr "Bug fix "
+msgid "Bug fix"
+msgstr "Bug fix"
 
 #. TRANSLATORS: The type of update
 msgid "Enhancement"
@@ -1020,8 +980,8 @@ msgid "Getting repositories"
 msgstr "Getting repositories"
 
 #. TRANSLATORS: The role of the transaction, in present tense
-msgid "Enabling repository"
-msgstr "Enabling repository"
+msgid "Modifying repository"
+msgstr "Modifying repository"
 
 #. TRANSLATORS: The role of the transaction, in present tense
 msgid "Setting data"
@@ -1066,6 +1026,10 @@ msgstr "Getting categories"
 #. TRANSLATORS: The role of the transaction, in present tense
 msgid "Getting transactions"
 msgstr "Getting transactions"
+
+#. TRANSLATORS: The role of the transaction, in present tense
+msgid "Getting system upgrades"
+msgstr "Getting system upgrades"
 
 #. TRANSLATORS: ask the user if they are comfortable installing insecure
 #. packages
@@ -1173,6 +1137,10 @@ msgstr "The following packages have to be reinstalled:"
 #. TRANSLATORS: When processing, we might have to downgrade other dependencies
 msgid "The following packages have to be downgraded:"
 msgstr "The following packages have to be downgraded:"
+
+#. TRANSLATORS: When processing, we might have to obsolete other dependencies
+msgid "The following packages have to be obsoleted:"
+msgstr "The following packages have to be obsoleted:"
 
 #. TRANSLATORS: When processing, untrusted and non-verified packages may be
 #. encountered
@@ -1297,22 +1265,22 @@ msgstr "Authentication is required to update software"
 
 #. SECURITY:
 #. - Normal users require admin authentication to enable or disable
-#. software sources as this can be used to enable new updates or
+#. software repositories as this can be used to enable new updates or
 #. install different versions of software.
-msgid "Change software source parameters"
-msgstr "Change software source parameters"
+msgid "Change software repository parameters"
+msgstr ""
 
-msgid "Authentication is required to change software source parameters"
-msgstr "Authentication is required to change software source parameters"
+msgid "Authentication is required to change software repository parameters"
+msgstr ""
 
 #. SECURITY:
 #. - Normal users do not require admin authentication to refresh the
 #. cache, as this doesn't actually install or remove software.
-msgid "Refresh system sources"
-msgstr "Refresh system sources"
+msgid "Refresh system repositories"
+msgstr ""
 
-msgid "Authentication is required to refresh the system sources"
-msgstr "Authentication is required to refresh the system sources"
+msgid "Authentication is required to refresh the system repositories"
+msgstr ""
 
 #. SECURITY:
 #. - Normal users do not require admin authentication to set the proxy
@@ -1342,10 +1310,10 @@ msgstr "Authentication is required to reload the device with a new driver"
 #. this can make the system unbootable or stop other applications from
 #. working.
 msgid "Upgrade System"
-msgstr ""
+msgstr "Upgrade System"
 
 msgid "Authentication is required to upgrade the operating system"
-msgstr ""
+msgstr "Authentication is required to upgrade the operating system"
 
 #. SECURITY:
 #. - Normal users require admin authentication to repair the system
@@ -1358,8 +1326,9 @@ msgid "Authentication is required to repair the installed software"
 msgstr "Authentication is required to repair the installed software"
 
 #. SECURITY:
-#. - Normal users are able to ask updates to be installed at
-#. early boot time without a password.
+#. - Normal users require admin authentication to upgrade the system
+#. to a new distribution since this can make the system unbootable or
+#. stop other applications from working.
 msgid "Trigger offline updates"
 msgstr "Trigger offline updates"
 

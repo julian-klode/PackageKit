@@ -26,6 +26,7 @@
 #include <string.h>
 #include <sys/utsname.h>
 #include <glib/gstdio.h>
+#include <syslog.h>
 
 #include "pk-backend-alpm.h"
 #include "pk-alpm-config.h"
@@ -456,7 +457,7 @@ pk_alpm_config_add_server (PkAlpmConfig *config,
 			      PkAlpmConfigSection *section,
 			      const gchar *address, GError **e)
 {
-	_cleanup_free_ gchar *url = NULL;
+	g_autofree gchar *url = NULL;
 
 	g_return_val_if_fail (config != NULL, FALSE);
 	g_return_val_if_fail (section != NULL, FALSE);
@@ -468,7 +469,7 @@ pk_alpm_config_add_server (PkAlpmConfig *config,
 		return FALSE;
 
 	if (config->arch != NULL) {
-		_cleanup_free_ gchar *temp = url;
+		g_autofree gchar *temp = url;
 		url = g_regex_replace_literal (config->xarch, temp, -1, 0,
 					       config->arch, 0, e);
 		if (url == NULL)
@@ -499,9 +500,9 @@ static gboolean
 pk_alpm_config_parse (PkAlpmConfig *config, const gchar *filename,
 			 PkAlpmConfigSection *section, GError **error)
 {
-	_cleanup_object_unref_ GFile *file = NULL;
-	_cleanup_object_unref_ GFileInputStream *is = NULL;
-	_cleanup_object_unref_ GDataInputStream *input = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GFileInputStream) is = NULL;
+	g_autoptr(GDataInputStream) input = NULL;
 	gchar *key, *str, *line = NULL;
 	guint num = 1;
 	GError *e = NULL;
@@ -611,6 +612,11 @@ pk_alpm_config_parse (PkAlpmConfig *config, const gchar *filename,
 			continue;
 		}
 
+		if (g_strcmp0 (key, "Usage") == 0 && str != NULL) {
+			/* Ignore "Usage" key instead of crashing */
+			continue;
+		}
+
 		/* report errors from above */
 		g_set_error (&e, PK_ALPM_ERROR, PK_ALPM_ERR_CONFIG_INVALID,
 			     "unrecognised directive '%s'", key);
@@ -699,107 +705,95 @@ pk_alpm_config_initialize_alpm (PkAlpmConfig *config, GError **error)
 	return handle;
 }
 
-static alpm_siglevel_t
-pk_alpm_siglevel_parse (alpm_siglevel_t base, const alpm_list_t *list, GError **error)
+static int
+pk_alpm_siglevel_parse (alpm_list_t *values, alpm_siglevel_t *storage,
+		alpm_siglevel_t *storage_mask, GError **error)
 {
-	for (; list != NULL; list = list->next) {
+	alpm_siglevel_t level = *storage, mask = *storage_mask;
+	alpm_list_t *i;
+	int ret = 0;
+
+#define SLSET(sl) do { level |= (sl); mask |= (sl); } while(0)
+#define SLUNSET(sl) do { level &= ~(sl); mask |= (sl); } while(0)
+
+	for(i = values; i; i = alpm_list_next(i)) {
 		gboolean package = TRUE, database = TRUE;
-		const gchar *level = (const gchar *) list->data;
+		const char *original = i->data, *value;
 
-		if (g_str_has_prefix (level, "Package")) {
+		if (g_str_has_prefix (original, "Package")) {
 			database = FALSE;
-			level += 7;
-		} else if (g_str_has_prefix (level, "Database")) {
+			value = original + 7;
+		} else if (g_str_has_prefix (original, "Database")) {
 			package = FALSE;
-			level += 8;
-		}
+			value = original + 8;
+		} else
+			value = original;
 
-		if (g_strcmp0 (level, "Never") == 0) {
+		if (g_strcmp0 (value, "Never") == 0) {
 			if (package) {
-				base &= ~ALPM_SIG_PACKAGE;
-				base |= ALPM_SIG_PACKAGE_SET;
+				SLUNSET(ALPM_SIG_PACKAGE);
 			}
 			if (database) {
-				base &= ~ALPM_SIG_DATABASE;
+				SLUNSET(ALPM_SIG_DATABASE);
 			}
-		} else if (g_strcmp0 (level, "Optional") == 0) {
+		} else if (g_strcmp0 (value, "Optional") == 0) {
 			if (package) {
-				base |= ALPM_SIG_PACKAGE;
-				base |= ALPM_SIG_PACKAGE_OPTIONAL;
-				base |= ALPM_SIG_PACKAGE_SET;
+				SLSET(ALPM_SIG_PACKAGE | ALPM_SIG_PACKAGE_OPTIONAL);
 			}
 			if (database) {
-				base |= ALPM_SIG_DATABASE;
-				base |= ALPM_SIG_DATABASE_OPTIONAL;
+				SLSET(ALPM_SIG_DATABASE | ALPM_SIG_DATABASE_OPTIONAL);
 			}
-		} else if (g_strcmp0 (level, "Required") == 0) {
+		} else if (g_strcmp0 (value, "Required") == 0) {
 			if (package) {
-				base |= ALPM_SIG_PACKAGE;
-				base &= ~ALPM_SIG_PACKAGE_OPTIONAL;
-				base |= ALPM_SIG_PACKAGE_SET;
+				SLSET(ALPM_SIG_PACKAGE);
+				SLUNSET(ALPM_SIG_PACKAGE_OPTIONAL);
 			}
 			if (database) {
-				base |= ALPM_SIG_DATABASE;
-				base &= ~ALPM_SIG_DATABASE_OPTIONAL;
+				SLSET(ALPM_SIG_DATABASE);
+				SLUNSET(ALPM_SIG_DATABASE_OPTIONAL);
 			}
-		} else if (g_strcmp0 (level, "TrustedOnly") == 0) {
+		} else if (g_strcmp0 (value, "TrustedOnly") == 0) {
 			if (package) {
-				base &= ~ALPM_SIG_PACKAGE_MARGINAL_OK;
-				base &= ~ALPM_SIG_PACKAGE_UNKNOWN_OK;
-				base |= ALPM_SIG_PACKAGE_TRUST_SET;
+				SLUNSET(ALPM_SIG_PACKAGE_MARGINAL_OK | ALPM_SIG_PACKAGE_UNKNOWN_OK);
 			}
 			if (database) {
-				base &= ~ALPM_SIG_DATABASE_MARGINAL_OK;
-				base &= ~ALPM_SIG_DATABASE_UNKNOWN_OK;
+				SLUNSET(ALPM_SIG_DATABASE_MARGINAL_OK | ALPM_SIG_DATABASE_UNKNOWN_OK);
 			}
-		} else if (g_strcmp0 (level, "TrustAll") == 0) {
+		} else if (g_strcmp0 (value, "TrustAll") == 0) {
 			if (package) {
-				base |= ALPM_SIG_PACKAGE_MARGINAL_OK;
-				base |= ALPM_SIG_PACKAGE_UNKNOWN_OK;
-				base |= ALPM_SIG_PACKAGE_TRUST_SET;
+				SLSET(ALPM_SIG_PACKAGE_MARGINAL_OK | ALPM_SIG_PACKAGE_UNKNOWN_OK);
 			}
 			if (database) {
-				base |= ALPM_SIG_DATABASE_MARGINAL_OK;
-				base |= ALPM_SIG_DATABASE_UNKNOWN_OK;
 			}
 		} else {
 			g_set_error (error, PK_ALPM_ERROR, PK_ALPM_ERR_CONFIG_INVALID,
-				     "invalid SigLevel value: %s", level);
-			return ALPM_SIG_USE_DEFAULT;
+				     "invalid SigLevel value: %s", value);
+			ret = 0;
 		}
 	}
 
-	return base;
+#undef SLSET
+#undef SLUNSET
+
+	if(!ret) {
+		*storage = level;
+		*storage_mask = mask;
+	}
+
+	return ret;
 }
 
 static alpm_siglevel_t
-pk_alpm_siglevel_cross (alpm_siglevel_t base, const alpm_list_t *list, GError **error)
+pk_alpm_siglevel_cross (alpm_siglevel_t base, alpm_siglevel_t level, alpm_siglevel_t mask)
 {
-	alpm_siglevel_t level;
-
-	if (list == NULL)
-		return base;
-
-	level = pk_alpm_siglevel_parse (0, list, error);
-	if (level == ALPM_SIG_USE_DEFAULT)
-		return level;
-
-	/* based on unexplained code in pacman */
-	if ((level & ALPM_SIG_PACKAGE_SET) == 0)
-		level |= base & (ALPM_SIG_PACKAGE | ALPM_SIG_PACKAGE_OPTIONAL);
-	if ((level & ALPM_SIG_PACKAGE_TRUST_SET) == 0) {
-		level |= base & (ALPM_SIG_PACKAGE_MARGINAL_OK |
-				 ALPM_SIG_PACKAGE_UNKNOWN_OK);
-	}
-
-	return level;
+	return mask ? (level & mask) | (base & ~mask) : level;
 }
 
 static gboolean
 pk_alpm_config_configure_repos (PkBackend *backend, PkAlpmConfig *config,
 				   alpm_handle_t *handle, GError **error)
 {
-	alpm_siglevel_t base, local, remote;
+	alpm_siglevel_t base, level, mask, local, remote;
 	const alpm_list_t *i;
 	PkAlpmConfigSection *options;
 
@@ -811,15 +805,14 @@ pk_alpm_config_configure_repos (PkBackend *backend, PkAlpmConfig *config,
 	i = config->sections;
 	options = i->data;
 
-	base = pk_alpm_siglevel_parse (base, options->siglevels, error);
-	if (base == ALPM_SIG_USE_DEFAULT)
+	if (pk_alpm_siglevel_parse (options->siglevels, &level, &mask, error) > 0)
 		return FALSE;
 
-	local = pk_alpm_siglevel_cross (base, config->localfilesiglevels, error);
+	local = pk_alpm_siglevel_cross (base, level, mask);
 	if (local == ALPM_SIG_USE_DEFAULT)
 		return FALSE;
 
-	remote = pk_alpm_siglevel_cross (base, config->remotefilesiglevels, error);
+	remote = pk_alpm_siglevel_cross (base, level, mask);
 	if (remote == ALPM_SIG_USE_DEFAULT)
 		return FALSE;
 
@@ -829,12 +822,16 @@ pk_alpm_config_configure_repos (PkBackend *backend, PkAlpmConfig *config,
 
 	while ((i = i->next) != NULL) {
 		PkAlpmConfigSection *repo = i->data;
-		alpm_siglevel_t level;
+		alpm_siglevel_t repo_level;
 
-		level = pk_alpm_siglevel_parse (base, repo->siglevels, error);
-		if (level == ALPM_SIG_USE_DEFAULT)
+		if (pk_alpm_siglevel_parse (repo->siglevels, &level, &mask, error) > 0)
 			return FALSE;
-		pk_alpm_add_database (backend, repo->name, repo->servers, level);
+
+		repo_level = pk_alpm_siglevel_cross (base, level, mask);
+		if (repo_level == ALPM_SIG_USE_DEFAULT)
+			 return FALSE;
+
+		pk_alpm_add_database (backend, repo->name, repo->servers, repo_level);
 	}
 
 	return TRUE;
@@ -844,23 +841,23 @@ static gboolean
 pk_alpm_spawn (const gchar *command)
 {
 	int status;
-	_cleanup_error_free_ GError *error = NULL;
+	g_autoptr(GError) error = NULL;
 
 	g_return_val_if_fail (command != NULL, FALSE);
 
 	if (!g_spawn_command_line_sync (command, NULL, NULL, &status, &error)) {
-		g_warning ("could not spawn command: %s", error->message);
+		syslog (LOG_DAEMON | LOG_WARNING, "could not spawn command: %s", error->message);
 		return FALSE;
 	}
 
 	if (WIFEXITED (status) == 0) {
-		g_warning ("command did not execute correctly");
+		syslog (LOG_DAEMON | LOG_WARNING, "command did not execute correctly");
 		return FALSE;
 	}
 
 	if (WEXITSTATUS (status) != EXIT_SUCCESS) {
 		gint code = WEXITSTATUS (status);
-		g_warning ("command returned error code %d", code);
+		syslog (LOG_DAEMON | LOG_WARNING, "command returned error code %d", code);
 		return FALSE;
 	}
 
@@ -872,12 +869,12 @@ pk_alpm_fetchcb (const gchar *url, const gchar *path, gint force)
 {
 	GRegex *xo, *xi;
 	gint result = 0;
-	_cleanup_free_ gchar *basename = NULL;
-	_cleanup_free_ gchar *file = NULL;
-	_cleanup_free_ gchar *finalcmd = NULL;
-	_cleanup_free_ gchar *oldpwd = NULL;
-	_cleanup_free_ gchar *part = NULL;
-	_cleanup_free_ gchar *tempcmd = NULL;
+	g_autofree gchar *basename = NULL;
+	g_autofree gchar *file = NULL;
+	g_autofree gchar *finalcmd = NULL;
+	g_autofree gchar *oldpwd = NULL;
+	g_autofree gchar *part = NULL;
+	g_autofree gchar *tempcmd = NULL;
 
 	g_return_val_if_fail (url != NULL, -1);
 	g_return_val_if_fail (path != NULL, -1);
@@ -885,7 +882,7 @@ pk_alpm_fetchcb (const gchar *url, const gchar *path, gint force)
 
 	oldpwd = g_get_current_dir ();
 	if (g_chdir (path) < 0) {
-		g_warning ("could not find or read directory '%s'", path);
+		syslog (LOG_DAEMON | LOG_WARNING, "could not find or read directory '%s'", path);
 		g_free (oldpwd);
 		return -1;
 	}
@@ -921,7 +918,7 @@ pk_alpm_fetchcb (const gchar *url, const gchar *path, gint force)
 	if (g_strrstr (xfercmd, "%o") != NULL) {
 		/* using .part filename */
 		if (g_rename (part, file) < 0) {
-			g_warning ("could not rename %s", part);
+			syslog (LOG_DAEMON | LOG_WARNING, "could not rename %s", part);
 			result = -1;
 			goto out;
 		}

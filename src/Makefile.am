@@ -9,8 +9,6 @@ AM_CPPFLAGS =						\
 	$(SQLITE_CFLAGS)				\
 	$(POLKIT_CFLAGS)				\
 	$(PYTHON_CFLAGS)				\
-	$(NETWORK_MANAGER_CFLAGS)			\
-	$(CONNMAN_CFLAGS)				\
 	$(SYSTEMD_CFLAGS)				\
 	-DPACKAGE_LOCALE_DIR=\"$(localedir)\"		\
 	-DBINDIR=\"$(bindir)\"				\
@@ -55,7 +53,6 @@ pk-resources.h: packagekit.gresource.xml
 		$(srcdir)/packagekit.gresource.xml
 
 shared_SOURCES =					\
-	pk-cleanup.h					\
 	pk-dbus.c					\
 	pk-dbus.h					\
 	pk-transaction.c				\
@@ -65,8 +62,6 @@ shared_SOURCES =					\
 	pk-backend.h					\
 	pk-backend-job.c				\
 	pk-backend-job.h				\
-	pk-network.c					\
-	pk-network.h					\
 	pk-shared.c					\
 	pk-shared.h					\
 	pk-resources.c					\
@@ -89,7 +84,6 @@ packagekit_direct_SOURCES =				\
 	pk-backend.h					\
 	pk-backend-job.c				\
 	pk-backend-job.h				\
-	pk-cleanup.h					\
 	pk-direct.c					\
 	pk-shared.c					\
 	pk-shared.h
@@ -101,8 +95,6 @@ packagekit_direct_CPPFLAGS =				\
 packagekit_direct_LDADD =				\
 	$(GLIB_LIBS)					\
 	$(GMODULE_LIBS)					\
-	$(NETWORK_MANAGER_LIBS)				\
-	$(CONNMAN_LIBS)					\
 	$(SQLITE_LIBS)					\
 	$(PK_GLIB2_LIBS)				\
 	$(POLKIT_LIBS)					\
@@ -130,8 +122,6 @@ packagekitd_CPPFLAGS =					\
 packagekitd_LDADD =					\
 	$(GLIB_LIBS)					\
 	$(GMODULE_LIBS)					\
-	$(NETWORK_MANAGER_LIBS)				\
-	$(CONNMAN_LIBS)					\
 	$(SQLITE_LIBS)					\
 	$(PK_GLIB2_LIBS)				\
 	$(PYTHON_LIBS)					\
@@ -159,8 +149,6 @@ pk_self_test_LDADD =					\
 	$(GLIB_LIBS)					\
 	$(GMODULE_LIBS)					\
 	$(SQLITE_LIBS)					\
-	$(NETWORK_MANAGER_LIBS)				\
-	$(CONNMAN_LIBS)					\
 	$(PK_GLIB2_LIBS)				\
 	$(POLKIT_LIBS)					\
 	$(GIO_LIBS)					\

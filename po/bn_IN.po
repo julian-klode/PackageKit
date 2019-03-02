@@ -10,9 +10,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PackageKit\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-11-27 14:52+0000\n"
-"PO-Revision-Date: 2015-11-27 14:52+0000\n"
-"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
+"POT-Creation-Date: 2018-02-19 12:41+0100\n"
+"PO-Revision-Date: 2018-02-19 11:42+0000\n"
+"Last-Translator: kalev <kalevlember@gmail.com>\n"
 "Language-Team: Bengali (India) (http://www.transifex.com/freedesktop/packagekit/language/bn_IN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -328,7 +328,7 @@ msgstr ""
 #. TRANSLATORS: There was an error getting the
 #. * details about the package. The detailed error follows
 #. TRANSLATORS: The package name was not found in
-#. * any software sources. The detailed error follows
+#. * any software repositories. The detailed error follows
 #, c-format
 msgid "This tool could not find all the packages: %s"
 msgstr "উপলব্ধ সকল প্যাকেজগুলি এই সামগ্রী পাওয়া যায়নি: %s"
@@ -507,16 +507,6 @@ msgstr "প্যাকেজ দ্বারা উপলব্ধ (provides) �
 msgid "A filename is required"
 msgstr ""
 
-#. TRANSLATORS: The user did not
-#. * provide a distro name
-msgid "A distribution name is required"
-msgstr ""
-
-#. TRANSLATORS: The user did not
-#. * provide an upgrade type
-msgid "An upgrade type is required, e.g. 'minimal', 'default' or 'complete'"
-msgstr ""
-
 #. TRANSLATORS: this is the description of the backend
 msgid "Description"
 msgstr ""
@@ -557,7 +547,12 @@ msgid "PackageKit Monitor"
 msgstr "PackageKit Monitor"
 
 #. TRANSLATORS: this is the message we send plymouth to
-#. * advise of the new percentage completion
+#. * advise of the new percentage completion when installing system upgrades
+msgid "Installing System Upgrade"
+msgstr ""
+
+#. TRANSLATORS: this is the message we send plymouth to
+#. * advise of the new percentage completion when installing updates
 msgid "Installing Updates"
 msgstr ""
 
@@ -573,53 +568,13 @@ msgstr ""
 msgid "Installing updates; this could take a while..."
 msgstr ""
 
-#. TRANSLATORS: when we are getting data from the daemon
-msgid "Getting package information..."
-msgstr "প্যাকেজ সংক্রান্ত তথ্য প্রাপ্ত করা হচ্ছে..."
-
-#. TRANSLATORS: run an applicaiton
-#, c-format
-msgid "Run %s"
-msgstr "%s সঞ্চালন করুন"
-
-#. TRANSLATORS: show the installed version of a package
-msgid "Installed version"
-msgstr "ইনস্টল করা সংস্করণ"
-
-#. TRANSLATORS: run the application now
-#, c-format
-msgid "Run version %s now"
-msgstr "%s সংস্করণ এখন সঞ্চালন করুন"
-
-#. TRANSLATORS: run the application now
-msgid "Run now"
-msgstr "এখন সঞ্চালন করুন"
-
-#. TRANSLATORS: update to a new version of the package
-#, c-format
-msgid "Update to version %s"
-msgstr "%s সংস্করণে আপডেট করুন"
-
-#. TRANSLATORS: To install a package
-#, c-format
-msgid "Install %s now"
-msgstr "%s এখন ইনস্টল করুন"
-
-#. TRANSLATORS: the version of the package
-msgid "Version"
-msgstr "সংস্করণ"
-
-#. TRANSLATORS: noting found, so can't install
-msgid "No packages found for your system"
-msgstr "আপনার সিস্টেমের জন্য কোনো প্যাকেজ পাওয়া যায়নি"
-
-#. TRANSLATORS: package is being installed
-msgid "Installing..."
-msgstr "ইনস্টল করা হচ্ছে..."
+#. TRANSLATORS: we've started doing offline system upgrade
+msgid "Installing system upgrade; this could take a while..."
+msgstr ""
 
 #. TRANSLATORS: downloading repo data so we can search
-msgid "Downloading details about the software sources."
-msgstr "সফ্টওয়্যারের উৎসস্থল সম্পর্কে বিরবণ ডাউনলোড করা হচ্ছে।"
+msgid "Downloading details about the software repositories."
+msgstr ""
 
 #. TRANSLATORS: downloading file lists so we can search
 msgid "Downloading filelists (this may take some time to complete)."
@@ -856,6 +811,11 @@ msgstr "ব্যবহৃত লাইব্রেরিগুলি পরী�
 msgid "Copying files"
 msgstr "ফাইল কপি করা হচ্ছে"
 
+#. TRANSLATORS: transaction state, we are running hooks before or after the
+#. transaction
+msgid "Running hooks"
+msgstr ""
+
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"
 msgstr "সকল ফাইলের জন্য ডিবাগ সংক্রান্ত তথ্য প্রদর্শন করা হবে"
@@ -883,8 +843,8 @@ msgid "Security"
 msgstr "নিরাপত্তা বিষয়ক"
 
 #. TRANSLATORS: The type of update
-msgid "Bug fix "
-msgstr "বাগ সংশোধন"
+msgid "Bug fix"
+msgstr ""
 
 #. TRANSLATORS: The type of update
 msgid "Enhancement"
@@ -1018,8 +978,8 @@ msgid "Getting repositories"
 msgstr "সংগ্রহস্থলের তালিকা প্রাপ্ত করা হচ্ছে"
 
 #. TRANSLATORS: The role of the transaction, in present tense
-msgid "Enabling repository"
-msgstr "সংগ্রহস্থল সক্রিয় করা হচ্ছে"
+msgid "Modifying repository"
+msgstr ""
 
 #. TRANSLATORS: The role of the transaction, in present tense
 msgid "Setting data"
@@ -1064,6 +1024,10 @@ msgstr "বিভাগ পরীক্ষা করা হচ্ছে"
 #. TRANSLATORS: The role of the transaction, in present tense
 msgid "Getting transactions"
 msgstr "ট্রানস্যাকশন প্রাপ্ত করা হচ্ছে"
+
+#. TRANSLATORS: The role of the transaction, in present tense
+msgid "Getting system upgrades"
+msgstr ""
 
 #. TRANSLATORS: ask the user if they are comfortable installing insecure
 #. packages
@@ -1171,6 +1135,10 @@ msgstr "নিম্নলিখিত প্যাকেজগুলি পু�
 #. TRANSLATORS: When processing, we might have to downgrade other dependencies
 msgid "The following packages have to be downgraded:"
 msgstr "নিম্নলিখিত প্যাকেজগুলি ডাউনগ্রেড করা আবশ্যক:"
+
+#. TRANSLATORS: When processing, we might have to obsolete other dependencies
+msgid "The following packages have to be obsoleted:"
+msgstr ""
 
 #. TRANSLATORS: When processing, untrusted and non-verified packages may be
 #. encountered
@@ -1295,22 +1263,22 @@ msgstr ""
 
 #. SECURITY:
 #. - Normal users require admin authentication to enable or disable
-#. software sources as this can be used to enable new updates or
+#. software repositories as this can be used to enable new updates or
 #. install different versions of software.
-msgid "Change software source parameters"
-msgstr "সফ্টওয়্যার উৎসের পরামিতি পরিবর্তন করুন"
+msgid "Change software repository parameters"
+msgstr ""
 
-msgid "Authentication is required to change software source parameters"
-msgstr "সফ্টওয়্যারের উৎস সংক্রান্ত পরামিতি পরিবর্তনের জন্য অনুমোদন প্রয়োজন"
+msgid "Authentication is required to change software repository parameters"
+msgstr ""
 
 #. SECURITY:
 #. - Normal users do not require admin authentication to refresh the
 #. cache, as this doesn't actually install or remove software.
-msgid "Refresh system sources"
-msgstr "সিস্টেমের উৎস নতুন করে পড়া হবে"
+msgid "Refresh system repositories"
+msgstr ""
 
-msgid "Authentication is required to refresh the system sources"
-msgstr "সিস্টেমের উৎস নতুন করে প্রদর্শনের জন্য অনুমোদন আবশ্যক"
+msgid "Authentication is required to refresh the system repositories"
+msgstr ""
 
 #. SECURITY:
 #. - Normal users do not require admin authentication to set the proxy
@@ -1356,8 +1324,9 @@ msgid "Authentication is required to repair the installed software"
 msgstr ""
 
 #. SECURITY:
-#. - Normal users are able to ask updates to be installed at
-#. early boot time without a password.
+#. - Normal users require admin authentication to upgrade the system
+#. to a new distribution since this can make the system unbootable or
+#. stop other applications from working.
 msgid "Trigger offline updates"
 msgstr ""
 

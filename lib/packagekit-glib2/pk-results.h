@@ -57,6 +57,10 @@ typedef struct _PkResultsPrivate	PkResultsPrivate;
 typedef struct _PkResults		PkResults;
 typedef struct _PkResultsClass		PkResultsClass;
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(PkResults, g_object_unref)
+#endif
+
 struct _PkResults
 {
 	 GObject		 parent;
@@ -76,11 +80,12 @@ struct _PkResultsClass
 
 GType		 pk_results_get_type		  	(void);
 PkResults	*pk_results_new				(void);
-void		 pk_results_test			(gpointer		 user_data);
 
 /* set */
 gboolean	 pk_results_set_exit_code		(PkResults		*results,
 							 PkExitEnum		 exit_enum);
+gboolean	 pk_results_set_role	 		(PkResults		*results,
+							 PkRoleEnum		 role);
 gboolean	 pk_results_set_error_code 		(PkResults		*results,
 							 PkError		*item);
 

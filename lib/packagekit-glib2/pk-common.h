@@ -35,35 +35,35 @@ G_BEGIN_DECLS
 /**
  * PK_DBUS_SERVICE:
  *
- * The SYSTEM service DBUS name
+ * The DBUS name for the PackageKit system service.
  */
 #define	PK_DBUS_SERVICE			"org.freedesktop.PackageKit"
 
 /**
  * PK_DBUS_PATH:
  *
- * The DBUS path
+ * The DBUS path to the PackageKit service.
  */
 #define	PK_DBUS_PATH			"/org/freedesktop/PackageKit"
 
 /**
  * PK_DBUS_INTERFACE:
  *
- * The DBUS interface
+ * The DBUS interface used by the PackageKit service.
  */
 #define	PK_DBUS_INTERFACE		"org.freedesktop.PackageKit"
 
 /**
  * PK_DBUS_INTERFACE_TRANSACTION:
  *
- * The DBUS interface for the transactions
+ * The DBUS interface for PackageKit transactions.
  */
 #define	PK_DBUS_INTERFACE_TRANSACTION	"org.freedesktop.PackageKit.Transaction"
 
 /**
  * PK_DBUS_INTERFACE_OFFLINE:
  *
- * The DBUS interface for the offline update functionality
+ * The DBUS interface for PackageKit offline update functionality
  */
 #define	PK_DBUS_INTERFACE_OFFLINE	"org.freedesktop.PackageKit.Offline"
 
@@ -87,7 +87,6 @@ G_BEGIN_DECLS
  */
 #define	PK_SYSTEM_PACKAGE_CACHE_FILENAME	"/var/lib/PackageKit/package-cache.db"
 
-void		 pk_common_test				(gpointer	 user_data);
 gchar		**pk_ptr_array_to_strv			(GPtrArray	*array)
 							 G_GNUC_WARN_UNUSED_RESULT;
 gchar		*pk_iso8601_present			(void)

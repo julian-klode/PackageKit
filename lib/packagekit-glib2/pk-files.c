@@ -92,7 +92,7 @@ pk_files_get_files (PkFiles *files)
 	return files->priv->files;
 }
 
-/**
+/*
  * pk_files_get_property:
  **/
 static void
@@ -114,7 +114,7 @@ pk_files_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec
 	}
 }
 
-/**
+/*
  * pk_files_set_property:
  **/
 static void
@@ -138,7 +138,7 @@ pk_files_set_property (GObject *object, guint prop_id, const GValue *value, GPar
 	}
 }
 
-/**
+/*
  * pk_files_class_init:
  **/
 static void
@@ -173,7 +173,7 @@ pk_files_class_init (PkFilesClass *klass)
 	g_type_class_add_private (klass, sizeof (PkFilesPrivate));
 }
 
-/**
+/*
  * pk_files_init:
  **/
 static void
@@ -184,7 +184,7 @@ pk_files_init (PkFiles *files)
 	files->priv->files = NULL;
 }
 
-/**
+/*
  * pk_files_finalize:
  **/
 static void
@@ -202,7 +202,7 @@ pk_files_finalize (GObject *object)
 /**
  * pk_files_new:
  *
- * Return value: a new PkFiles object.
+ * Return value: a new #PkFiles object.
  *
  * Since: 0.5.4
  **/

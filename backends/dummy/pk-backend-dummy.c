@@ -543,9 +543,9 @@ pk_backend_get_updates (PkBackend *backend, PkBackendJob *job, PkBitfield filter
 static void
 pk_backend_install_thread (PkBackendJob *job, GVariant *params, gpointer user_data)
 {
-	gchar **package_ids;
 	PkBitfield transaction_flags;
 	PkBackendDummyJobData *job_data = pk_backend_job_get_user_data (job);
+	g_autofree gchar **package_ids = NULL;
 
 	g_variant_get (params, "(t^a&s)",
 		       &transaction_flags,
@@ -833,10 +833,10 @@ pk_backend_refresh_cache (PkBackend *backend, PkBackendJob *job, gboolean force)
 static void
 pk_backend_resolve_thread (PkBackendJob *job, GVariant *params, gpointer user_data)
 {
-	gchar **search;
 	guint i;
 	guint len;
 	PkBitfield filters;
+	g_autofree gchar **search = NULL;
 
 	g_variant_get (params, "(t^a&s)",
 		       &filters,
@@ -996,9 +996,9 @@ pk_backend_search_names_thread (PkBackendJob *job, GVariant *params, gpointer us
 	guint i;
 	const gchar *locale;
 	PkRoleEnum role;
-	gchar **search;
 	PkBitfield filters;
 	PkBackendDummyJobData *job_data = pk_backend_job_get_user_data (job);
+	g_autofree gchar **search = NULL;
 
 	role = pk_backend_job_get_role (job);
 	if (role == PK_ROLE_ENUM_GET_PACKAGES) {
@@ -1062,8 +1062,8 @@ static void
 pk_backend_update_packages_download_thread (PkBackendJob *job, GVariant *params, gpointer user_data)
 {
 	PkBitfield transaction_flags;
-	gchar **package_ids;
 	PkBackendDummyJobData *job_data = pk_backend_job_get_user_data (job);
+	g_autofree gchar **package_ids = NULL;
 
 	g_variant_get (params, "(t^a&s)",
 		       &transaction_flags,
@@ -1247,7 +1247,7 @@ pk_backend_socket_has_data_cb (GSocket *socket,
 	gchar buffer[1024];
 	gint wrote = 0;
 	PkBackendDummyJobData *job_data = pk_backend_job_get_user_data (job);
-	_cleanup_error_free_ GError *error = NULL;
+	g_autoptr(GError) error = NULL;
 
 	/* the helper process exited */
 	if ((condition & G_IO_HUP) > 0) {
@@ -1314,9 +1314,9 @@ pk_backend_update_packages (PkBackend *backend, PkBackendJob *job, PkBitfield tr
 	GSource *source;
 	PkBackendDummyJobData *job_data = pk_backend_job_get_user_data (job);
 	PkRoleEnum role;
-	_cleanup_error_free_ GError *error = NULL;
+	g_autoptr(GError) error = NULL;
 	const gchar *frontend_socket = NULL;
-	_cleanup_object_unref_ GSocketAddress *address = NULL;
+	g_autoptr(GSocketAddress) address = NULL;
 
 	/* FIXME: support only_trusted */
 	role = pk_backend_job_get_role (job);

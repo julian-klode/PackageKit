@@ -21,14 +21,13 @@
 
 /**
  * SECTION:pk-package-id
- * @short_description: Functionality to read a PackageID
+ * @title: PackageIDs
+ * @short_description: Functions for process PackageIDs
  */
 
 #include "config.h"
 
 #include <glib.h>
-
-#include "src/pk-cleanup.h"
 
 #include <packagekit-glib2/pk-package-id.h>
 
@@ -68,6 +67,8 @@ out:
  * pk_package_id_check:
  * @package_id: the PackageID to check
  *
+ * Check if a Packageid is well formed.
+ *
  * Return value: %TRUE if the PackageID was well formed.
  *
  * Since: 0.5.0
@@ -75,7 +76,7 @@ out:
 gboolean
 pk_package_id_check (const gchar *package_id)
 {
-	_cleanup_strv_free_ gchar **sections = NULL;
+	g_auto(GStrv) sections = NULL;
 	gboolean ret;
 
 	/* NULL check */
@@ -101,6 +102,8 @@ pk_package_id_check (const gchar *package_id)
  * @arch: the package architecture
  * @data: the package extra data
  *
+ * Generate a PackageID.
+ *
  * Return value: returns a string to form the PackageID.
  *
  * Since: 0.5.0
@@ -118,7 +121,7 @@ pk_package_id_build (const gchar *name, const gchar *version,
 			  NULL);
 }
 
-/**
+/*
  * pk_arch_base_ix86:
  **/
 static gboolean
@@ -132,7 +135,7 @@ pk_arch_base_ix86 (const gchar *arch)
 	return FALSE;
 }
 
-/**
+/*
  * pk_package_id_equal_fuzzy_arch_section:
  **/
 static gboolean
@@ -160,8 +163,8 @@ pk_package_id_equal_fuzzy_arch_section (const gchar *arch1, const gchar *arch2)
 gboolean
 pk_package_id_equal_fuzzy_arch (const gchar *package_id1, const gchar *package_id2)
 {
-	_cleanup_strv_free_ gchar **sections1 = NULL;
-	_cleanup_strv_free_ gchar **sections2 = NULL;
+	g_auto(GStrv) sections1 = NULL;
+	g_auto(GStrv) sections2 = NULL;
 
 	sections1 = pk_package_id_split (package_id1);
 	sections2 = pk_package_id_split (package_id2);
@@ -185,7 +188,7 @@ pk_package_id_equal_fuzzy_arch (const gchar *package_id1, const gchar *package_i
 gchar *
 pk_package_id_to_printable (const gchar *package_id)
 {
-	_cleanup_strv_free_  gchar **parts = NULL;
+	g_auto(GStrv) parts = NULL;
 	gchar *value = NULL;
 	GString *string = NULL;
 

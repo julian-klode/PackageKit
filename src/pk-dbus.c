@@ -31,7 +31,6 @@
  #include <systemd/sd-login.h>
 #endif
 
-#include "pk-cleanup.h"
 #include "pk-dbus.h"
 
 #define PK_DBUS_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), PK_TYPE_DBUS, PkDbusPrivate))
@@ -61,8 +60,8 @@ guint
 pk_dbus_get_uid (PkDbus *dbus, const gchar *sender)
 {
 	guint uid = G_MAXUINT;
-	_cleanup_error_free_ GError *error = NULL;
-	_cleanup_variant_unref_ GVariant *value = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) value = NULL;
 
 	g_return_val_if_fail (PK_IS_DBUS (dbus), G_MAXUINT);
 	g_return_val_if_fail (sender != NULL, G_MAXUINT);
@@ -102,8 +101,8 @@ static guint
 pk_dbus_get_pid (PkDbus *dbus, const gchar *sender)
 {
 	guint pid = G_MAXUINT;
-	_cleanup_error_free_ GError *error = NULL;
-	_cleanup_variant_unref_ GVariant *value = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) value = NULL;
 
 	g_return_val_if_fail (PK_IS_DBUS (dbus), G_MAXUINT);
 	g_return_val_if_fail (sender != NULL, G_MAXUINT);
@@ -151,8 +150,8 @@ pk_dbus_get_cmdline (PkDbus *dbus, const gchar *sender)
 	gboolean ret;
 	gchar *cmdline = NULL;
 	guint pid;
-	_cleanup_error_free_ GError *error = NULL;
-	_cleanup_free_ gchar *filename = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *filename = NULL;
 
 	g_return_val_if_fail (PK_IS_DBUS (dbus), NULL);
 	g_return_val_if_fail (sender != NULL, NULL);
@@ -179,32 +178,33 @@ pk_dbus_get_cmdline (PkDbus *dbus, const gchar *sender)
 }
 
 #ifdef HAVE_SYSTEMD
+static gchar *
+pk_dbus_make_logind_session_id (const gchar *session)
+{
+	g_assert (session != NULL);
+	return g_strdup_printf ("/org/freedesktop/logind/session-%s", session);
+}
+
 /**
  * pk_dbus_get_session_systemd:
  **/
 static gchar *
 pk_dbus_get_session_systemd (guint pid)
 {
-	gchar *session = NULL;
-	gchar *session_tmp = NULL;
-	gint rc;
+	g_autofree gchar *session_id = NULL;
+	uid_t uid;
 
-	rc = sd_pid_get_session (pid, &session_tmp);
-	if (rc < 0) {
-		g_warning ("failed to get session, errno %i", rc);
-		goto out;
-	}
-	if (session_tmp == NULL) {
-		g_warning ("no session for %i", pid);
-		goto out;
-	}
+	/* do process -> pid -> same session */
+	if (sd_pid_get_session (pid, &session_id) >= 0)
+		return pk_dbus_make_logind_session_id (session_id);
 
-	/* convert to a GLib allocated string */
-	session = g_strdup_printf ("/org/freedesktop/logind/session-%s",
-				   session_tmp);
-out:
-	free (session_tmp);
-	return session;
+	/* do process -> uid -> graphical session */
+	if (sd_pid_get_owner_uid (pid, &uid) < 0)
+		return NULL;
+	if (sd_uid_get_display (uid, &session_id) >= 0)
+		return pk_dbus_make_logind_session_id (session_id);
+
+	return NULL;
 }
 #endif
 
@@ -222,10 +222,10 @@ pk_dbus_get_session (PkDbus *dbus, const gchar *sender)
 {
 	gchar *session = NULL;
 #ifndef HAVE_SYSTEMD
-	_cleanup_error_free_ GError *error = NULL;
+	g_autoptr(GError) error = NULL;
 #endif
 	guint pid;
-	_cleanup_variant_unref_ GVariant *value = NULL;
+	g_autoptr(GVariant) value = NULL;
 
 	g_return_val_if_fail (PK_IS_DBUS (dbus), NULL);
 	g_return_val_if_fail (sender != NULL, NULL);
@@ -253,6 +253,8 @@ pk_dbus_get_session (PkDbus *dbus, const gchar *sender)
 	/* get session from systemd or ConsoleKit */
 #ifdef HAVE_SYSTEMD
 	session = pk_dbus_get_session_systemd (pid);
+	if (session == NULL)
+		g_warning ("failed to get session for pid %u", pid);
 #else
 	/* get session from ConsoleKit */
 	value = g_dbus_proxy_call_sync (dbus->priv->proxy_session,
@@ -316,7 +318,7 @@ pk_dbus_class_init (PkDbusClass *klass)
 static void
 pk_dbus_init (PkDbus *dbus)
 {
-	_cleanup_error_free_ GError *error = NULL;
+	g_autoptr(GError) error = NULL;
 	dbus->priv = PK_DBUS_GET_PRIVATE (dbus);
 
 	/* use the bus to get the uid */

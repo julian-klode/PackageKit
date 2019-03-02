@@ -25,6 +25,7 @@
 
 #include <glib/gstdio.h>
 #include <glib/gthread.h>
+#include <syslog.h>
 #include <pk-backend.h>
 
 #include "pk-backend-alpm.h"
@@ -52,7 +53,7 @@ pk_backend_get_author (PkBackend *backend)
 static void
 pk_alpm_logcb (alpm_loglevel_t level, const gchar *format, va_list args)
 {
-	_cleanup_free_ gchar *output = NULL;
+	g_autofree gchar *output = NULL;
 
 	if (format == NULL || format[0] == '\0')
 		return;
@@ -65,11 +66,11 @@ pk_alpm_logcb (alpm_loglevel_t level, const gchar *format, va_list args)
 		g_debug ("%s", output);
 		break;
 	case ALPM_LOG_WARNING:
-		g_warning ("%s", output);
+		syslog (LOG_DAEMON | LOG_WARNING, "%s", output);
 		pk_alpm_transaction_output (output);
 		break;
 	default:
-		g_warning ("%s", output);
+		syslog (LOG_DAEMON | LOG_WARNING, "%s", output);
 		break;
 	}
 }
@@ -121,8 +122,8 @@ pk_alpm_initialize_monitor (PkBackend *backend, GError **error)
 {
 	PkBackendAlpmPrivate *priv = pk_backend_get_user_data (backend);
 
-	_cleanup_free_ gchar * path = NULL;
-	_cleanup_object_unref_ GFile *directory = NULL;
+	g_autofree gchar * path = NULL;
+	g_autoptr(GFile) directory = NULL;
 
 	path = g_strconcat (alpm_option_get_dbpath (priv->alpm) ,"/local", NULL);
 	directory = g_file_new_for_path (path);
@@ -141,7 +142,7 @@ pk_backend_initialize (GKeyFile *conf, PkBackend *backend)
 {
 	PkBackendAlpmPrivate *priv;
 
-	_cleanup_error_free_ GError *error = NULL;
+	g_autoptr(GError) error = NULL;
 
 	priv = g_new0 (PkBackendAlpmPrivate, 1);
 	pk_backend_set_user_data (backend, priv);
@@ -224,10 +225,5 @@ pk_alpm_finish (PkBackendJob *job, GError *error)
 void
 pk_backend_start_job (PkBackend *backend, PkBackendJob *job)
 {
-	PkBackendAlpmPrivate *priv = pk_backend_get_user_data (backend);
-	if (g_once_init_enter (&priv->environment_initialized))
-	{
-		pk_alpm_environment_initialize (job);
-		g_once_init_leave (&priv->environment_initialized, TRUE);
-	}
+	pk_alpm_environment_initialize (job);
 }

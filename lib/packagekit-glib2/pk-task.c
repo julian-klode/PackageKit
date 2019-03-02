@@ -29,8 +29,6 @@
 
 #include <gio/gio.h>
 
-#include "src/pk-cleanup.h"
-
 #include <packagekit-glib2/pk-task.h>
 #include <packagekit-glib2/pk-common.h>
 #include <packagekit-glib2/pk-enum.h>
@@ -110,7 +108,7 @@ G_DEFINE_TYPE (PkTask, pk_task, PK_TYPE_CLIENT)
 
 static void pk_task_ready_cb (GObject *source_object, GAsyncResult *res, PkTaskState *state);
 
-/**
+/*
  * pk_task_generate_request_id:
  **/
 static guint
@@ -120,7 +118,7 @@ pk_task_generate_request_id (void)
 	return ++id;
 }
 
-/**
+/*
  * pk_task_find_by_request:
  **/
 static PkTaskState *
@@ -142,7 +140,7 @@ pk_task_find_by_request (PkTask *task, guint request)
 	return NULL;
 }
 
-/**
+/*
  * pk_task_generic_state_finish:
  **/
 static void
@@ -186,7 +184,7 @@ pk_task_generic_state_finish (PkTaskState *state, const GError *error)
 	g_slice_free (PkTaskState, state);
 }
 
-/**
+/*
  * pk_task_do_async_action:
  **/
 static void
@@ -320,7 +318,7 @@ pk_task_do_async_action (PkTaskState *state)
 	}
 }
 
-/**
+/*
  * pk_task_package_filter_cb:
  **/
 static gboolean
@@ -339,17 +337,17 @@ pk_task_package_filter_cb (PkPackage *package, gpointer user_data)
 
 static void pk_task_do_async_simulate_action (PkTaskState *state);
 
-/**
+/*
  * pk_task_simulate_ready_cb:
  **/
 static void
 pk_task_simulate_ready_cb (GObject *source_object, GAsyncResult *res, PkTaskState *state)
 {
 	PkTaskClass *klass = PK_TASK_GET_CLASS (state->task);
-	_cleanup_error_free_ GError *error = NULL;
-	_cleanup_object_unref_ PkPackageSack *sack = NULL;
-	_cleanup_object_unref_ PkPackageSack *untrusted_sack = NULL;
-	_cleanup_object_unref_ PkResults *results = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(PkPackageSack) sack = NULL;
+	g_autoptr(PkPackageSack) untrusted_sack = NULL;
+	g_autoptr(PkResults) results = NULL;
 
 	/* old results no longer valid */
 	if (state->results != NULL) {
@@ -373,7 +371,7 @@ pk_task_simulate_ready_cb (GObject *source_object, GAsyncResult *res, PkTaskStat
 	}
 
 	/* we own a copy now */
-	state->results = g_object_ref (G_OBJECT(results));
+	state->results = g_object_ref (results);
 
 	/* get exit code */
 	state->exit_enum = pk_results_get_exit_code (state->results);
@@ -423,7 +421,7 @@ pk_task_simulate_ready_cb (GObject *source_object, GAsyncResult *res, PkTaskStat
 	klass->simulate_question (state->task, state->request, state->results);
 }
 
-/**
+/*
  * pk_task_do_async_simulate_action:
  **/
 static void
@@ -509,15 +507,15 @@ pk_task_do_async_simulate_action (PkTaskState *state)
 	}
 }
 
-/**
+/*
  * pk_task_install_signatures_ready_cb:
  **/
 static void
 pk_task_install_signatures_ready_cb (GObject *source_object, GAsyncResult *res, PkTaskState *state)
 {
 	PkTask *task = PK_TASK (source_object);
-	_cleanup_error_free_ GError *error = NULL;
-	_cleanup_object_unref_ PkResults *results = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(PkResults) results = NULL;
 
 	/* old results no longer valid */
 	if (state->results != NULL) {
@@ -533,14 +531,14 @@ pk_task_install_signatures_ready_cb (GObject *source_object, GAsyncResult *res, 
 	}
 
 	/* we own a copy now */
-	state->results = g_object_ref (G_OBJECT(results));
+	state->results = g_object_ref (results);
 
 	/* get exit code */
 	state->exit_enum = pk_results_get_exit_code (state->results);
 
 	/* need untrusted */
 	if (state->exit_enum != PK_EXIT_ENUM_SUCCESS) {
-		_cleanup_object_unref_ PkError *error_code = NULL;
+		g_autoptr(PkError) error_code = NULL;
 		error_code = pk_results_get_error_code (state->results);
 		/* TODO: convert the PkErrorEnum to a PK_CLIENT_ERROR_* enum */
 		g_set_error (&error,
@@ -554,7 +552,7 @@ pk_task_install_signatures_ready_cb (GObject *source_object, GAsyncResult *res, 
 	pk_task_do_async_action (state);
 }
 
-/**
+/*
  * pk_task_install_signatures:
  **/
 static void
@@ -562,10 +560,10 @@ pk_task_install_signatures (PkTaskState *state)
 {
 	PkRepoSignatureRequired *item;
 	PkSigTypeEnum type;
-	_cleanup_error_free_ GError *error = NULL;
-	_cleanup_free_ gchar *key_id = NULL;
-	_cleanup_free_ gchar *package_id = NULL;
-	_cleanup_ptrarray_unref_ GPtrArray *array = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *key_id = NULL;
+	g_autofree gchar *package_id = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 
 	/* get results */
 	array = pk_results_get_repo_signature_required_array (state->results);
@@ -601,15 +599,15 @@ pk_task_install_signatures (PkTaskState *state)
 					   (GAsyncReadyCallback) pk_task_install_signatures_ready_cb, state);
 }
 
-/**
+/*
  * pk_task_accept_eulas_ready_cb:
  **/
 static void
 pk_task_accept_eulas_ready_cb (GObject *source_object, GAsyncResult *res, PkTaskState *state)
 {
 	PkTask *task = PK_TASK (source_object);
-	_cleanup_error_free_ GError *error = NULL;
-	_cleanup_object_unref_ PkResults *results = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(PkResults) results = NULL;
 
 	/* old results no longer valid */
 	if (state->results != NULL) {
@@ -625,14 +623,14 @@ pk_task_accept_eulas_ready_cb (GObject *source_object, GAsyncResult *res, PkTask
 	}
 
 	/* we own a copy now */
-	state->results = g_object_ref (G_OBJECT(results));
+	state->results = g_object_ref (results);
 
 	/* get exit code */
 	state->exit_enum = pk_results_get_exit_code (state->results);
 
 	/* need untrusted */
 	if (state->exit_enum != PK_EXIT_ENUM_SUCCESS) {
-		_cleanup_object_unref_ PkError *error_code = NULL;
+		g_autoptr(PkError) error_code = NULL;
 		error_code = pk_results_get_error_code (state->results);
 		/* TODO: convert the PkErrorEnum to a PK_CLIENT_ERROR_* enum */
 		g_set_error (&error,
@@ -646,16 +644,16 @@ pk_task_accept_eulas_ready_cb (GObject *source_object, GAsyncResult *res, PkTask
 	pk_task_do_async_action (state);
 }
 
-/**
+/*
  * pk_task_accept_eulas:
  **/
 static void
 pk_task_accept_eulas (PkTaskState *state)
 {
 	PkEulaRequired *item;
-	_cleanup_error_free_ GError *error = NULL;
-	_cleanup_free_ gchar *eula_id = NULL;
-	_cleanup_ptrarray_unref_ GPtrArray *array = NULL;
+	g_autoptr(GError) error = NULL;
+	const gchar *eula_id;
+	g_autoptr(GPtrArray) array = NULL;
 
 	/* get results */
 	array = pk_results_get_eula_required_array (state->results);
@@ -679,9 +677,7 @@ pk_task_accept_eulas (PkTaskState *state)
 
 	/* get first item of data */
 	item = g_ptr_array_index (array, 0);
-	g_object_get (item,
-		      "eula-id", &eula_id,
-		      NULL);
+	eula_id = pk_eula_required_get_eula_id (item);
 
 	/* do new async method */
 	pk_client_accept_eula_async (PK_CLIENT(state->task), eula_id,
@@ -689,15 +685,15 @@ pk_task_accept_eulas (PkTaskState *state)
 				     (GAsyncReadyCallback) pk_task_accept_eulas_ready_cb, state);
 }
 
-/**
+/*
  * pk_task_repair_ready_cb:
  **/
 static void
 pk_task_repair_ready_cb (GObject *source_object, GAsyncResult *res, PkTaskState *state)
 {
 	PkTask *task = PK_TASK (source_object);
-	_cleanup_error_free_ GError *error = NULL;
-	_cleanup_object_unref_ PkResults *results = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(PkResults) results = NULL;
 
 	/* old results no longer valid */
 	if (state->results != NULL) {
@@ -713,14 +709,14 @@ pk_task_repair_ready_cb (GObject *source_object, GAsyncResult *res, PkTaskState 
 	}
 
 	/* we own a copy now */
-	state->results = g_object_ref (G_OBJECT(results));
+	state->results = g_object_ref (results);
 
 	/* get exit code */
 	state->exit_enum = pk_results_get_exit_code (state->results);
 
 	/* need untrusted */
 	if (state->exit_enum != PK_EXIT_ENUM_SUCCESS) {
-		_cleanup_object_unref_ PkError *error_code = NULL;
+		g_autoptr(PkError) error_code = NULL;
 		error_code = pk_results_get_error_code (state->results);
 		/* TODO: convert the PkErrorEnum to a PK_CLIENT_ERROR_* enum */
 		error = g_error_new (PK_CLIENT_ERROR,
@@ -735,7 +731,7 @@ pk_task_repair_ready_cb (GObject *source_object, GAsyncResult *res, PkTaskState 
 	pk_task_do_async_action (state);
 }
 
-/**
+/*
  * pk_task_user_accepted_idle_cb:
  **/
 static gboolean
@@ -775,6 +771,12 @@ pk_task_user_accepted_idle_cb (PkTaskState *state)
 
 /**
  * pk_task_user_accepted:
+ * @task: a valid #PkTask instance
+ * @request: request ID for EULA.
+ *
+ * Mark a EULA as accepted by the user.
+ *
+ * Return value: %TRUE if @request is valid.
  *
  * Since: 0.5.2
  **/
@@ -798,13 +800,13 @@ pk_task_user_accepted (PkTask *task, guint request)
 	return TRUE;
 }
 
-/**
+/*
  * pk_task_user_declined_idle_cb:
  **/
 static gboolean
 pk_task_user_declined_idle_cb (PkTaskState *state)
 {
-	_cleanup_error_free_ GError *error = NULL;
+	g_autoptr(GError) error = NULL;
 
 	/* the introduction is finished */
 	if (state->simulate) {
@@ -826,6 +828,12 @@ pk_task_user_declined_idle_cb (PkTaskState *state)
 
 /**
  * pk_task_user_declined:
+ * @task: a valid #PkTask instance
+ * @request: request ID for EULA.
+ *
+ * Mark a EULA as declined by the user.
+ *
+ * Return value: %TRUE if @request is valid.
  *
  * Since: 0.5.2
  **/
@@ -849,7 +857,7 @@ pk_task_user_declined (PkTask *task, guint request)
 	return TRUE;
 }
 
-/**
+/*
  * pk_task_retry_cancelled_transaction_cb:
  **/
 static gboolean
@@ -861,7 +869,7 @@ pk_task_retry_cancelled_transaction_cb (gpointer user_data)
 	return FALSE;
 }
 
-/**
+/*
  * pk_task_ready_cb:
  **/
 static void
@@ -870,8 +878,8 @@ pk_task_ready_cb (GObject *source_object, GAsyncResult *res, PkTaskState *state)
 	PkTask *task = PK_TASK (source_object);
 	PkTaskClass *klass = PK_TASK_GET_CLASS (task);
 	gboolean interactive;
-	_cleanup_error_free_ GError *error = NULL;
-	_cleanup_object_unref_ PkResults *results = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(PkResults) results = NULL;
 
 	/* old results no longer valid */
 	if (state->results != NULL) {
@@ -887,7 +895,7 @@ pk_task_ready_cb (GObject *source_object, GAsyncResult *res, PkTaskState *state)
 	}
 
 	/* we own a copy now */
-	state->results = g_object_ref (G_OBJECT(results));
+	state->results = g_object_ref (results);
 
 	/* get exit code */
 	state->exit_enum = pk_results_get_exit_code (state->results);
@@ -1041,7 +1049,7 @@ pk_task_ready_cb (GObject *source_object, GAsyncResult *res, PkTaskState *state)
  * @task: a valid #PkTask instance
  * @package_ids: (array zero-terminated=1): a null terminated array of package_id structures such as "hal;0.0.1;i386;fedora"
  * @cancellable: a #GCancellable or %NULL
- * @progress_callback: (scope call): the function to run when the progress changes
+ * @progress_callback: (scope notified): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
  * @callback_ready: the function to run on completion
  * @user_data: the data to pass to @callback
@@ -1056,7 +1064,7 @@ pk_task_install_packages_async (PkTask *task, gchar **package_ids, GCancellable 
 				GAsyncReadyCallback callback_ready, gpointer user_data)
 {
 	PkTaskState *state;
-	_cleanup_object_unref_ GSimpleAsyncResult *res = NULL;
+	g_autoptr(GSimpleAsyncResult) res = NULL;
 	PkTaskClass *klass = PK_TASK_GET_CLASS (task);
 
 	g_return_if_fail (PK_IS_TASK (task));
@@ -1077,12 +1085,12 @@ pk_task_install_packages_async (PkTask *task, gchar **package_ids, GCancellable 
 	state->ret = FALSE;
 	state->transaction_flags = pk_bitfield_value (PK_TRANSACTION_FLAG_ENUM_ONLY_TRUSTED);
 	if (task->priv->allow_reinstall) {
-		pk_bitfield_add(state->transaction_flags,
-			   	PK_TRANSACTION_FLAG_ENUM_ALLOW_REINSTALL);
+		pk_bitfield_add (state->transaction_flags,
+				 PK_TRANSACTION_FLAG_ENUM_ALLOW_REINSTALL);
 	}
 	if (task->priv->allow_downgrade) {
-		pk_bitfield_add(state->transaction_flags,
-			   	PK_TRANSACTION_FLAG_ENUM_ALLOW_DOWNGRADE);
+		pk_bitfield_add (state->transaction_flags,
+				 PK_TRANSACTION_FLAG_ENUM_ALLOW_DOWNGRADE);
 	}
 	state->package_ids = g_strdupv (package_ids);
 	state->request = pk_task_generate_request_id ();
@@ -1102,7 +1110,7 @@ pk_task_install_packages_async (PkTask *task, gchar **package_ids, GCancellable 
  * @task: a valid #PkTask instance
  * @package_ids: (array zero-terminated=1): a null terminated array of package_id structures such as "hal;0.0.1;i386;fedora"
  * @cancellable: a #GCancellable or %NULL
- * @progress_callback: (scope call): the function to run when the progress changes
+ * @progress_callback: (scope notified): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
  * @callback_ready: the function to run on completion
  * @user_data: the data to pass to @callback_ready
@@ -1117,7 +1125,7 @@ pk_task_update_packages_async (PkTask *task, gchar **package_ids, GCancellable *
 			       GAsyncReadyCallback callback_ready, gpointer user_data)
 {
 	PkTaskState *state;
-	_cleanup_object_unref_ GSimpleAsyncResult *res = NULL;
+	g_autoptr(GSimpleAsyncResult) res = NULL;
 	PkTaskClass *klass = PK_TASK_GET_CLASS (task);
 
 	g_return_if_fail (PK_IS_CLIENT (task));
@@ -1155,7 +1163,7 @@ pk_task_update_packages_async (PkTask *task, gchar **package_ids, GCancellable *
  * @distro_id: a distro ID such as "fedora-14"
  * @upgrade_kind: a #PkUpgradeKindEnum such as %PK_UPGRADE_KIND_ENUM_COMPLETE
  * @cancellable: a #GCancellable or %NULL
- * @progress_callback: (scope call): the function to run when the progress changes
+ * @progress_callback: (scope notified): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
  * @callback_ready: the function to run on completion
  * @user_data: the data to pass to @callback_ready
@@ -1177,7 +1185,7 @@ pk_task_upgrade_system_async (PkTask *task,
                               GAsyncReadyCallback callback_ready, gpointer user_data)
 {
 	PkTaskState *state;
-	_cleanup_object_unref_ GSimpleAsyncResult *res = NULL;
+	g_autoptr(GSimpleAsyncResult) res = NULL;
 	PkTaskClass *klass = PK_TASK_GET_CLASS (task);
 
 	g_return_if_fail (PK_IS_CLIENT (task));
@@ -1217,13 +1225,13 @@ pk_task_upgrade_system_async (PkTask *task,
  * @allow_deps: if other dependent packages are allowed to be removed from the computer
  * @autoremove: if other packages installed at the same time should be tried to remove
  * @cancellable: a #GCancellable or %NULL
- * @progress_callback: (scope call): the function to run when the progress changes
+ * @progress_callback: (scope notified): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
  * @callback_ready: the function to run on completion
  * @user_data: the data to pass to @callback_ready
  *
  * Remove a package (optionally with dependancies) from the system.
- * If %allow_deps is set to %FALSE, and other packages would have to be removed,
+ * If @allow_deps is set to %FALSE, and other packages would have to be removed,
  * then the transaction would fail.
  *
  * Since: 0.5.2
@@ -1234,7 +1242,7 @@ pk_task_remove_packages_async (PkTask *task, gchar **package_ids, gboolean allow
 			       GAsyncReadyCallback callback_ready, gpointer user_data)
 {
 	PkTaskState *state;
-	_cleanup_object_unref_ GSimpleAsyncResult *res = NULL;
+	g_autoptr(GSimpleAsyncResult) res = NULL;
 	PkTaskClass *klass = PK_TASK_GET_CLASS (task);
 
 	g_return_if_fail (PK_IS_CLIENT (task));
@@ -1272,7 +1280,7 @@ pk_task_remove_packages_async (PkTask *task, gchar **package_ids, gboolean allow
  * @task: a valid #PkTask instance
  * @files: (array zero-terminated=1): a file such as "/home/hughsie/Desktop/hal-devel-0.10.0.rpm"
  * @cancellable: a #GCancellable or %NULL
- * @progress_callback: (scope call): the function to run when the progress changes
+ * @progress_callback: (scope notified): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
  * @callback_ready: the function to run on completion
  * @user_data: the data to pass to @callback_ready
@@ -1288,7 +1296,7 @@ pk_task_install_files_async (PkTask *task, gchar **files, GCancellable *cancella
 			     GAsyncReadyCallback callback_ready, gpointer user_data)
 {
 	PkTaskState *state;
-	_cleanup_object_unref_ GSimpleAsyncResult *res = NULL;
+	g_autoptr(GSimpleAsyncResult) res = NULL;
 	PkTaskClass *klass = PK_TASK_GET_CLASS (task);
 
 	g_return_if_fail (PK_IS_CLIENT (task));
@@ -1329,7 +1337,7 @@ pk_task_install_files_async (PkTask *task, gchar **files, GCancellable *cancella
  * @filters: a bitfield of filters that can be used to limit the results
  * @packages: (array zero-terminated=1): package names to find
  * @cancellable: a #GCancellable or %NULL
- * @progress_callback: (scope call): the function to run when the progress changes
+ * @progress_callback: (scope notified): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
  * @callback_ready: the function to run on completion
  * @user_data: the data to pass to @callback
@@ -1344,7 +1352,7 @@ pk_task_resolve_async (PkTask *task, PkBitfield filters, gchar **packages, GCanc
 		       GAsyncReadyCallback callback_ready, gpointer user_data)
 {
 	PkTaskState *state;
-	_cleanup_object_unref_ GSimpleAsyncResult *res = NULL;
+	g_autoptr(GSimpleAsyncResult) res = NULL;
 
 	g_return_if_fail (PK_IS_TASK (task));
 	g_return_if_fail (callback_ready != NULL);
@@ -1387,7 +1395,7 @@ pk_task_resolve_async (PkTask *task, PkBitfield filters, gchar **packages, GCanc
  * @filters: a bitfield of filters that can be used to limit the results
  * @values: (array zero-terminated=1): search values
  * @cancellable: a #GCancellable or %NULL
- * @progress_callback: (scope call): the function to run when the progress changes
+ * @progress_callback: (scope notified): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
  * @callback_ready: the function to run on completion
  * @user_data: the data to pass to @callback
@@ -1402,7 +1410,7 @@ pk_task_search_names_async (PkTask *task, PkBitfield filters, gchar **values, GC
 			    GAsyncReadyCallback callback_ready, gpointer user_data)
 {
 	PkTaskState *state;
-	_cleanup_object_unref_ GSimpleAsyncResult *res = NULL;
+	g_autoptr(GSimpleAsyncResult) res = NULL;
 
 	g_return_if_fail (PK_IS_TASK (task));
 	g_return_if_fail (callback_ready != NULL);
@@ -1438,7 +1446,7 @@ pk_task_search_names_async (PkTask *task, PkBitfield filters, gchar **values, GC
  * @filters: a bitfield of filters that can be used to limit the results
  * @values: (array zero-terminated=1): search values
  * @cancellable: a #GCancellable or %NULL
- * @progress_callback: (scope call): the function to run when the progress changes
+ * @progress_callback: (scope notified): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
  * @callback_ready: the function to run on completion
  * @user_data: the data to pass to @callback
@@ -1453,7 +1461,7 @@ pk_task_search_details_async (PkTask *task, PkBitfield filters, gchar **values, 
 			      GAsyncReadyCallback callback_ready, gpointer user_data)
 {
 	PkTaskState *state;
-	_cleanup_object_unref_ GSimpleAsyncResult *res = NULL;
+	g_autoptr(GSimpleAsyncResult) res = NULL;
 
 	g_return_if_fail (PK_IS_TASK (task));
 	g_return_if_fail (callback_ready != NULL);
@@ -1489,7 +1497,7 @@ pk_task_search_details_async (PkTask *task, PkBitfield filters, gchar **values, 
  * @filters: a bitfield of filters that can be used to limit the results
  * @values: (array zero-terminated=1): search values
  * @cancellable: a #GCancellable or %NULL
- * @progress_callback: (scope call): the function to run when the progress changes
+ * @progress_callback: (scope notified): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
  * @callback_ready: the function to run on completion
  * @user_data: the data to pass to @callback
@@ -1504,7 +1512,7 @@ pk_task_search_groups_async (PkTask *task, PkBitfield filters, gchar **values, G
 			     GAsyncReadyCallback callback_ready, gpointer user_data)
 {
 	PkTaskState *state;
-	_cleanup_object_unref_ GSimpleAsyncResult *res = NULL;
+	g_autoptr(GSimpleAsyncResult) res = NULL;
 
 	g_return_if_fail (PK_IS_TASK (task));
 	g_return_if_fail (callback_ready != NULL);
@@ -1540,7 +1548,7 @@ pk_task_search_groups_async (PkTask *task, PkBitfield filters, gchar **values, G
  * @filters: a bitfield of filters that can be used to limit the results
  * @values: (array zero-terminated=1): search values
  * @cancellable: a #GCancellable or %NULL
- * @progress_callback: (scope call): the function to run when the progress changes
+ * @progress_callback: (scope notified): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
  * @callback_ready: the function to run on completion
  * @user_data: the data to pass to @callback
@@ -1555,7 +1563,7 @@ pk_task_search_files_async (PkTask *task, PkBitfield filters, gchar **values, GC
 			    GAsyncReadyCallback callback_ready, gpointer user_data)
 {
 	PkTaskState *state;
-	_cleanup_object_unref_ GSimpleAsyncResult *res = NULL;
+	g_autoptr(GSimpleAsyncResult) res = NULL;
 
 	g_return_if_fail (PK_IS_TASK (task));
 	g_return_if_fail (callback_ready != NULL);
@@ -1590,7 +1598,7 @@ pk_task_search_files_async (PkTask *task, PkBitfield filters, gchar **values, GC
  * @task: a valid #PkTask instance
  * @package_ids: (array zero-terminated=1): a null terminated array of package_id structures such as "hal;0.0.1;i386;fedora"
  * @cancellable: a #GCancellable or %NULL
- * @progress_callback: (scope call): the function to run when the progress changes
+ * @progress_callback: (scope notified): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
  * @callback_ready: the function to run on completion
  * @user_data: the data to pass to @callback
@@ -1605,7 +1613,7 @@ pk_task_get_details_async (PkTask *task, gchar **package_ids, GCancellable *canc
 			   GAsyncReadyCallback callback_ready, gpointer user_data)
 {
 	PkTaskState *state;
-	_cleanup_object_unref_ GSimpleAsyncResult *res = NULL;
+	g_autoptr(GSimpleAsyncResult) res = NULL;
 
 	g_return_if_fail (PK_IS_TASK (task));
 	g_return_if_fail (callback_ready != NULL);
@@ -1639,7 +1647,7 @@ pk_task_get_details_async (PkTask *task, gchar **package_ids, GCancellable *canc
  * @task: a valid #PkTask instance
  * @package_ids: (array zero-terminated=1): a null terminated array of package_id structures such as "hal;0.0.1;i386;fedora"
  * @cancellable: a #GCancellable or %NULL
- * @progress_callback: (scope call): the function to run when the progress changes
+ * @progress_callback: (scope notified): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
  * @callback_ready: the function to run on completion
  * @user_data: the data to pass to @callback
@@ -1654,7 +1662,7 @@ pk_task_get_update_detail_async (PkTask *task, gchar **package_ids, GCancellable
 				 GAsyncReadyCallback callback_ready, gpointer user_data)
 {
 	PkTaskState *state;
-	_cleanup_object_unref_ GSimpleAsyncResult *res = NULL;
+	g_autoptr(GSimpleAsyncResult) res = NULL;
 
 	g_return_if_fail (PK_IS_TASK (task));
 	g_return_if_fail (callback_ready != NULL);
@@ -1689,7 +1697,7 @@ pk_task_get_update_detail_async (PkTask *task, gchar **package_ids, GCancellable
  * @package_ids: (array zero-terminated=1): a null terminated array of package_id structures such as "hal;0.0.1;i386;fedora"
  * @directory: the destination directory
  * @cancellable: a #GCancellable or %NULL
- * @progress_callback: (scope call): the function to run when the progress changes
+ * @progress_callback: (scope notified): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
  * @callback_ready: the function to run on completion
  * @user_data: the data to pass to @callback
@@ -1704,7 +1712,7 @@ pk_task_download_packages_async (PkTask *task, gchar **package_ids, const gchar 
 				 GAsyncReadyCallback callback_ready, gpointer user_data)
 {
 	PkTaskState *state;
-	_cleanup_object_unref_ GSimpleAsyncResult *res = NULL;
+	g_autoptr(GSimpleAsyncResult) res = NULL;
 
 	g_return_if_fail (PK_IS_TASK (task));
 	g_return_if_fail (callback_ready != NULL);
@@ -1739,7 +1747,7 @@ pk_task_download_packages_async (PkTask *task, gchar **package_ids, const gchar 
  * @task: a valid #PkTask instance
  * @filters: a bitfield of filters that can be used to limit the results
  * @cancellable: a #GCancellable or %NULL
- * @progress_callback: (scope call): the function to run when the progress changes
+ * @progress_callback: (scope notified): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
  * @callback_ready: the function to run on completion
  * @user_data: the data to pass to @callback
@@ -1754,7 +1762,7 @@ pk_task_get_updates_async (PkTask *task, PkBitfield filters, GCancellable *cance
 			   GAsyncReadyCallback callback_ready, gpointer user_data)
 {
 	PkTaskState *state;
-	_cleanup_object_unref_ GSimpleAsyncResult *res = NULL;
+	g_autoptr(GSimpleAsyncResult) res = NULL;
 
 	g_return_if_fail (PK_IS_TASK (task));
 	g_return_if_fail (callback_ready != NULL);
@@ -1790,7 +1798,7 @@ pk_task_get_updates_async (PkTask *task, PkBitfield filters, GCancellable *cance
  * @package_ids: (array zero-terminated=1): a null terminated array of package_id structures such as "hal;0.0.1;i386;fedora"
  * @recursive: if we should recurse to packages that depend on other packages
  * @cancellable: a #GCancellable or %NULL
- * @progress_callback: (scope call): the function to run when the progress changes
+ * @progress_callback: (scope notified): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
  * @callback_ready: the function to run on completion
  * @user_data: the data to pass to @callback
@@ -1805,7 +1813,7 @@ pk_task_depends_on_async (PkTask *task, PkBitfield filters, gchar **package_ids,
 			   GAsyncReadyCallback callback_ready, gpointer user_data)
 {
 	PkTaskState *state;
-	_cleanup_object_unref_ GSimpleAsyncResult *res = NULL;
+	g_autoptr(GSimpleAsyncResult) res = NULL;
 
 	g_return_if_fail (PK_IS_TASK (task));
 	g_return_if_fail (callback_ready != NULL);
@@ -1841,7 +1849,7 @@ pk_task_depends_on_async (PkTask *task, PkBitfield filters, gchar **package_ids,
  * @task: a valid #PkTask instance
  * @filters: a bitfield of filters that can be used to limit the results
  * @cancellable: a #GCancellable or %NULL
- * @progress_callback: (scope call): the function to run when the progress changes
+ * @progress_callback: (scope notified): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
  * @callback_ready: the function to run on completion
  * @user_data: the data to pass to @callback
@@ -1856,7 +1864,7 @@ pk_task_get_packages_async (PkTask *task, PkBitfield filters, GCancellable *canc
 			    GAsyncReadyCallback callback_ready, gpointer user_data)
 {
 	PkTaskState *state;
-	_cleanup_object_unref_ GSimpleAsyncResult *res = NULL;
+	g_autoptr(GSimpleAsyncResult) res = NULL;
 
 	g_return_if_fail (PK_IS_TASK (task));
 	g_return_if_fail (callback_ready != NULL);
@@ -1892,7 +1900,7 @@ pk_task_get_packages_async (PkTask *task, PkBitfield filters, GCancellable *canc
  * @package_ids: (array zero-terminated=1): a null terminated array of package_id structures such as "hal;0.0.1;i386;fedora"
  * @recursive: if we should return packages that depend on the ones we do
  * @cancellable: a #GCancellable or %NULL
- * @progress_callback: (scope call): the function to run when the progress changes
+ * @progress_callback: (scope notified): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
  * @callback_ready: the function to run on completion
  * @user_data: the data to pass to @callback
@@ -1907,7 +1915,7 @@ pk_task_required_by_async (PkTask *task, PkBitfield filters, gchar **package_ids
 			    GAsyncReadyCallback callback_ready, gpointer user_data)
 {
 	PkTaskState *state;
-	_cleanup_object_unref_ GSimpleAsyncResult *res = NULL;
+	g_autoptr(GSimpleAsyncResult) res = NULL;
 
 	g_return_if_fail (PK_IS_TASK (task));
 	g_return_if_fail (callback_ready != NULL);
@@ -1944,7 +1952,7 @@ pk_task_required_by_async (PkTask *task, PkBitfield filters, gchar **package_ids
  * @filters: a bitfield of filters that can be used to limit the results
  * @values: (array zero-terminated=1): values to search for
  * @cancellable: a #GCancellable or %NULL
- * @progress_callback: (scope call): the function to run when the progress changes
+ * @progress_callback: (scope notified): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
  * @callback_ready: the function to run on completion
  * @user_data: the data to pass to @callback
@@ -1960,7 +1968,7 @@ pk_task_what_provides_async (PkTask *task, PkBitfield filters,
 			     GAsyncReadyCallback callback_ready, gpointer user_data)
 {
 	PkTaskState *state;
-	_cleanup_object_unref_ GSimpleAsyncResult *res = NULL;
+	g_autoptr(GSimpleAsyncResult) res = NULL;
 
 	g_return_if_fail (PK_IS_TASK (task));
 	g_return_if_fail (callback_ready != NULL);
@@ -1995,7 +2003,7 @@ pk_task_what_provides_async (PkTask *task, PkBitfield filters,
  * @task: a valid #PkTask instance
  * @package_ids: (array zero-terminated=1): a null terminated array of package_id structures such as "hal;0.0.1;i386;fedora"
  * @cancellable: a #GCancellable or %NULL
- * @progress_callback: (scope call): the function to run when the progress changes
+ * @progress_callback: (scope notified): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
  * @callback_ready: the function to run on completion
  * @user_data: the data to pass to @callback
@@ -2010,7 +2018,7 @@ pk_task_get_files_async (PkTask *task, gchar **package_ids, GCancellable *cancel
 			 GAsyncReadyCallback callback_ready, gpointer user_data)
 {
 	PkTaskState *state;
-	_cleanup_object_unref_ GSimpleAsyncResult *res = NULL;
+	g_autoptr(GSimpleAsyncResult) res = NULL;
 
 	g_return_if_fail (PK_IS_TASK (task));
 	g_return_if_fail (callback_ready != NULL);
@@ -2043,9 +2051,9 @@ pk_task_get_files_async (PkTask *task, gchar **package_ids, GCancellable *cancel
  * pk_task_get_categories_async:
  * @task: a valid #PkTask instance
  * @cancellable: a #GCancellable or %NULL
- * @progress_callback: (scope call): the function to run when the progress changes
+ * @progress_callback: (scope notified): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
- * @callback_ready: the function to run on completion
+ * @callback_ready: (scope async): the function to run on completion
  * @user_data: the data to pass to @callback
  *
  * Get the categories available.
@@ -2058,7 +2066,7 @@ pk_task_get_categories_async (PkTask *task, GCancellable *cancellable,
 			      GAsyncReadyCallback callback_ready, gpointer user_data)
 {
 	PkTaskState *state;
-	_cleanup_object_unref_ GSimpleAsyncResult *res = NULL;
+	g_autoptr(GSimpleAsyncResult) res = NULL;
 
 	g_return_if_fail (PK_IS_TASK (task));
 	g_return_if_fail (callback_ready != NULL);
@@ -2091,7 +2099,7 @@ pk_task_get_categories_async (PkTask *task, GCancellable *cancellable,
  * @task: a valid #PkTask instance
  * @force: if the metadata should be deleted and re-downloaded even if it is correct
  * @cancellable: a #GCancellable or %NULL
- * @progress_callback: (scope call): the function to run when the progress changes
+ * @progress_callback: (scope notified): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
  * @callback_ready: the function to run on completion
  * @user_data: the data to pass to @callback
@@ -2106,7 +2114,7 @@ pk_task_refresh_cache_async (PkTask *task, gboolean force, GCancellable *cancell
 			     GAsyncReadyCallback callback_ready, gpointer user_data)
 {
 	PkTaskState *state;
-	_cleanup_object_unref_ GSimpleAsyncResult *res = NULL;
+	g_autoptr(GSimpleAsyncResult) res = NULL;
 
 	g_return_if_fail (PK_IS_TASK (task));
 	g_return_if_fail (callback_ready != NULL);
@@ -2140,7 +2148,7 @@ pk_task_refresh_cache_async (PkTask *task, gboolean force, GCancellable *cancell
  * @task: a valid #PkTask instance
  * @filters: a bitfield of filters that can be used to limit the results
  * @cancellable: a #GCancellable or %NULL
- * @progress_callback: (scope call): the function to run when the progress changes
+ * @progress_callback: (scope notified): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
  * @callback_ready: the function to run on completion
  * @user_data: the data to pass to @callback
@@ -2155,7 +2163,7 @@ pk_task_get_repo_list_async (PkTask *task, PkBitfield filters, GCancellable *can
 			     GAsyncReadyCallback callback_ready, gpointer user_data)
 {
 	PkTaskState *state;
-	_cleanup_object_unref_ GSimpleAsyncResult *res = NULL;
+	g_autoptr(GSimpleAsyncResult) res = NULL;
 
 	g_return_if_fail (PK_IS_TASK (task));
 	g_return_if_fail (callback_ready != NULL);
@@ -2187,10 +2195,10 @@ pk_task_get_repo_list_async (PkTask *task, PkBitfield filters, GCancellable *can
 /**
  * pk_task_repo_enable_async:
  * @task: a valid #PkTask instance
- * @repo_id: The software source ID
+ * @repo_id: The software repository ID
  * @enabled: %TRUE or %FALSE
  * @cancellable: a #GCancellable or %NULL
- * @progress_callback: (scope call): the function to run when the progress changes
+ * @progress_callback: (scope notified): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
  * @callback_ready: the function to run on completion
  * @user_data: the data to pass to @callback
@@ -2205,7 +2213,7 @@ pk_task_repo_enable_async (PkTask *task, const gchar *repo_id, gboolean enabled,
 			   GAsyncReadyCallback callback_ready, gpointer user_data)
 {
 	PkTaskState *state;
-	_cleanup_object_unref_ GSimpleAsyncResult *res = NULL;
+	g_autoptr(GSimpleAsyncResult) res = NULL;
 
 	g_return_if_fail (PK_IS_TASK (task));
 	g_return_if_fail (callback_ready != NULL);
@@ -2239,7 +2247,7 @@ pk_task_repo_enable_async (PkTask *task, const gchar *repo_id, gboolean enabled,
  * pk_task_repair_system_async:
  * @task: a valid #PkTask instance
  * @cancellable: a #GCancellable or %NULL
- * @progress_callback: (scope call): the function to run when the progress changes
+ * @progress_callback: (scope notified): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
  * @callback_ready: the function to run on completion
  * @user_data: the data to pass to @callback_ready
@@ -2258,7 +2266,7 @@ pk_task_repair_system_async (PkTask *task,
 {
 	PkTaskState *state;
 	PkTaskClass *klass = PK_TASK_GET_CLASS (task);
-	_cleanup_object_unref_ GSimpleAsyncResult *res = NULL;
+	g_autoptr(GSimpleAsyncResult) res = NULL;
 
 	g_return_if_fail (PK_IS_CLIENT (task));
 	g_return_if_fail (callback_ready != NULL);
@@ -2375,7 +2383,7 @@ pk_task_set_only_download (PkTask *task, gboolean only_download)
  *
  * Gets if we are just preparing the transaction for later.
  *
- * Return value: %TRUE if we are simulating
+ * Return value: %TRUE if only downloading
  *
  * Since: 0.8.1
  **/
@@ -2402,7 +2410,7 @@ pk_task_set_only_trusted (PkTask *task, gboolean only_trusted)
 {
 	g_return_if_fail (PK_IS_TASK (task));
 	task->priv->only_trusted = only_trusted;
-	g_object_notify (G_OBJECT (task), "only-download");
+	g_object_notify (G_OBJECT (task), "only-trusted");
 }
 
 /**
@@ -2428,8 +2436,6 @@ pk_task_get_only_trusted (PkTask *task)
  * @allow_downgrade: %TRUE to allow packages to be downgraded.
  *
  * If package downgrades shall be allowed during transaction.
- *
- * Return value: %TRUE if we allow downgrades
  *
  * Since: 1.0.2
  **/
@@ -2465,8 +2471,6 @@ pk_task_get_allow_downgrade (PkTask *task)
  *
  * If package reinstallation shall be allowed during transaction.
  *
- * Return value: %TRUE if we allow reinstallations
- *
  * Since: 1.0.2
  **/
 void
@@ -2483,7 +2487,7 @@ pk_task_set_allow_reinstall (PkTask *task, gboolean allow_reinstall)
  *
  * Gets if we allow packages to be reinstalled.
  *
- * Return value: %TRUE if package downgrades are allowed
+ * Return value: %TRUE if package reinstallation is allowed
  *
  * Since: 1.0.2
  **/
@@ -2494,7 +2498,7 @@ pk_task_get_allow_reinstall (PkTask *task)
 	return task->priv->allow_reinstall;
 }
 
-/**
+/*
  * pk_task_get_property:
  **/
 static void
@@ -2525,7 +2529,7 @@ pk_task_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec 
 	}
 }
 
-/**
+/*
  * pk_task_set_property:
  **/
 static void
@@ -2556,7 +2560,7 @@ pk_task_set_property (GObject *object, guint prop_id, const GValue *value, GPara
 	}
 }
 
-/**
+/*
  * pk_task_class_init:
  **/
 static void
@@ -2571,6 +2575,8 @@ pk_task_class_init (PkTaskClass *klass)
 	/**
 	 * PkTask:simulate:
 	 *
+         * %TRUE if we are simulating.
+         *
 	 * Since: 0.5.2
 	 */
 	pspec = g_param_spec_boolean ("simulate", NULL, NULL,
@@ -2581,6 +2587,8 @@ pk_task_class_init (PkTaskClass *klass)
 	/**
 	 * PkTask:only-download:
 	 *
+         * %TRUE if we are just preparing the transaction for later.
+         *
 	 * Since: 0.8.1
 	 */
 	pspec = g_param_spec_boolean ("only-download", NULL, NULL,
@@ -2591,6 +2599,8 @@ pk_task_class_init (PkTaskClass *klass)
 	/**
 	 * PkTask:only-trusted:
 	 *
+         * %TRUE if only authenticated packages should be allowed in the transaction.
+         *
 	 * Since: 0.9.5
 	 */
 	pspec = g_param_spec_boolean ("only-trusted", NULL, NULL,
@@ -2601,6 +2611,8 @@ pk_task_class_init (PkTaskClass *klass)
 	/**
 	 * PkTask:allow-reinstall:
 	 *
+         * %TRUE if package reinstallation shall be allowed during transaction.
+         *
 	 * Since: 1.0.2
 	 */
 	pspec = g_param_spec_boolean ("allow-reinstall", NULL, NULL,
@@ -2611,6 +2623,8 @@ pk_task_class_init (PkTaskClass *klass)
 	/**
 	 * PkTask:allow-downgrade:
 	 *
+         * %TRUE if package downgrades are allowed.
+         *
 	 * Since: 1.0.2
 	 */
 	pspec = g_param_spec_boolean ("allow-downgrade", NULL, NULL,
@@ -2621,7 +2635,7 @@ pk_task_class_init (PkTaskClass *klass)
 	g_type_class_add_private (klass, sizeof (PkTaskPrivate));
 }
 
-/**
+/*
  * pk_task_init:
  **/
 static void
@@ -2634,7 +2648,7 @@ pk_task_init (PkTask *task)
 	task->priv->allow_downgrade = FALSE;
 }
 
-/**
+/*
  * pk_task_finalize:
  **/
 static void
@@ -2648,7 +2662,7 @@ pk_task_finalize (GObject *object)
 /**
  * pk_task_new:
  *
- * Return value: a new PkTask object.
+ * Return value: a new #PkTask object.
  *
  * Since: 0.5.2
  **/

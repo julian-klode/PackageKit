@@ -8,6 +8,10 @@ if BACKEND_TYPE_APTCC
 SUBDIRS += aptcc
 endif
 
+if BACKEND_TYPE_DNF
+SUBDIRS += dnf
+endif
+
 if BACKEND_TYPE_DUMMY
 SUBDIRS += dummy
 endif
@@ -16,12 +20,8 @@ if BACKEND_TYPE_ENTROPY
 SUBDIRS += entropy
 endif
 
-if BACKEND_TYPE_HIF
-SUBDIRS += hif
-endif
-
-if BACKEND_TYPE_KATJA
-SUBDIRS += katja
+if BACKEND_TYPE_SLACK
+SUBDIRS += slack
 endif
 
 if BACKEND_TYPE_URPMI
@@ -50,6 +50,10 @@ endif
 
 if BACKEND_TYPE_PORTS
 SUBDIRS += ports
+endif
+
+if BACKEND_TYPE_NIX
+SUBDIRS += nix
 endif
 
 clean-local :

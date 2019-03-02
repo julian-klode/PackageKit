@@ -522,11 +522,46 @@
     </property>
 
     <!--*********************************************************************-->
+    <property name="UpdateTriggered" type="b" access="read">
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            If an update has been triggered.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </property>
+
+    <!--*********************************************************************-->
     <property name="UpgradePrepared" type="b" access="read">
       <doc:doc>
         <doc:description>
           <doc:para>
             If a system upgrade has been prepared and is ready to be triggered.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </property>
+
+    <!--*********************************************************************-->
+    <property name="UpgradeTriggered" type="b" access="read">
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            If a system upgrade has been triggered.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </property>
+
+    <!--*********************************************************************-->
+    <property name="PreparedUpgrade" type="a{sv}" access="read">
+      <annotation name="org.qtproject.QtDBus.QtTypeName" value="QVariantMap"/>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Details about a prepared system upgrade. Currently recognized keys
+            are <doc:tt>"name"</doc:tt> and <doc:tt>"version"</doc:tt>.
           </doc:para>
         </doc:description>
       </doc:doc>

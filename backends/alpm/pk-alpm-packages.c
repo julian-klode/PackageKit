@@ -67,7 +67,7 @@ pk_alpm_find_pkg (PkBackendJob *job, const gchar *package_id, GError **error)
 {
 	PkBackend *backend = pk_backend_job_get_backend (job);
 	PkBackendAlpmPrivate *priv = pk_backend_get_user_data (backend);
-	_cleanup_strv_free_ gchar **package = NULL;
+	g_auto(GStrv) package = NULL;
 	const gchar *repo_id;
 	alpm_db_t *db = NULL;
 	alpm_pkg_t *pkg;
@@ -184,7 +184,6 @@ pk_backend_resolve_thread (PkBackendJob *job, GVariant* params, gpointer p)
 {
 	const gchar **search;
 	PkBitfield filters;
-	_cleanup_error_free_ GError *error = NULL;
 
 	g_variant_get (params, "(t^a&s)", &filters, &search);
 
@@ -194,15 +193,13 @@ pk_backend_resolve_thread (PkBackendJob *job, GVariant* params, gpointer p)
 
 		/* find a package with the given id or name */
 		if (pk_package_id_check (*search)) {
-			if (!pk_backend_resolve_package (job, *search, filters, &error))
-				break;
+			pk_backend_resolve_package (job, *search, filters, NULL);
 		} else {
-			if (!pk_backend_resolve_name (job, *search, filters, &error))
-				break;
+			pk_backend_resolve_name (job, *search, filters, NULL);
 		}
 	}
 
-	pk_alpm_finish (job, error);
+	pk_alpm_finish (job, NULL);
 }
 
 void
@@ -220,7 +217,7 @@ static void
 pk_backend_get_details_thread (PkBackendJob *job, GVariant* params, gpointer p)
 {
 	gchar **packages;
-	_cleanup_error_free_ GError *error = NULL;
+	g_autoptr(GError) error = NULL;
 
 	packages = (gchar**) p;
 
@@ -285,7 +282,7 @@ pk_backend_get_files_thread (PkBackendJob *job, GVariant* params, gpointer p)
 	PkBackend *backend = pk_backend_job_get_backend (job);
 	PkBackendAlpmPrivate *priv = pk_backend_get_user_data (backend);
 	gchar **packages;
-	_cleanup_error_free_ GError *error = NULL;
+	g_autoptr(GError) error = NULL;
 	const gchar *root;
 
 	packages = (gchar**) p;
@@ -296,7 +293,7 @@ pk_backend_get_files_thread (PkBackendJob *job, GVariant* params, gpointer p)
 		alpm_pkg_t *pkg;
 
 		gsize i;
-		_cleanup_strv_free_ gchar **files = NULL;
+		g_auto(GStrv) files = NULL;
 
 		if (pk_backend_job_is_cancelled (job))
 			break;

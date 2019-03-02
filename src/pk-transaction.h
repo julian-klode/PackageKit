@@ -48,6 +48,10 @@ typedef struct
 	GObjectClass	parent_class;
 } PkTransactionClass;
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(PkTransaction, g_object_unref)
+#endif
+
 /* these have to be kept in order */
 typedef enum {
 	PK_TRANSACTION_STATE_NEW,
@@ -81,8 +85,6 @@ void		 pk_transaction_set_state			(PkTransaction	*transaction,
 const gchar	*pk_transaction_state_to_string			(PkTransactionState state);
 const gchar	*pk_transaction_get_tid				(PkTransaction	*transaction);
 gboolean	 pk_transaction_is_exclusive			(PkTransaction	*transaction);
-void		 pk_transaction_set_supported_roles		(PkTransaction	*transaction,
-								 GPtrArray	*plugins);
 gboolean	 pk_transaction_is_finished_with_lock_required	(PkTransaction *transaction);
 void		 pk_transaction_reset_after_lock_error		(PkTransaction *transaction);
 void		 pk_transaction_make_exclusive			(PkTransaction *transaction);

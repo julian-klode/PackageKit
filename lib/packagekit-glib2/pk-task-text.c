@@ -31,8 +31,6 @@
 
 #include "pk-task-text.h"
 #include "pk-console-shared.h"
-#include "src/pk-cleanup.h"
-
 static void     pk_task_text_finalize	(GObject     *object);
 
 #define PK_TASK_TEXT_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), PK_TYPE_TASK_TEXT, PkTaskTextPrivate))
@@ -49,7 +47,7 @@ struct _PkTaskTextPrivate
 
 G_DEFINE_TYPE (PkTaskText, pk_task_text, PK_TYPE_TASK)
 
-/**
+/*
  * pk_task_text_untrusted_question:
  **/
 static void
@@ -75,7 +73,7 @@ pk_task_text_untrusted_question (PkTask *task, guint request, PkResults *results
 	}
 }
 
-/**
+/*
  * pk_task_text_key_question:
  **/
 static void
@@ -165,7 +163,7 @@ pk_task_text_key_question (PkTask *task, guint request, PkResults *results)
 	g_ptr_array_unref (array);
 }
 
-/**
+/*
  * pk_task_text_eula_question:
  **/
 static void
@@ -173,12 +171,7 @@ pk_task_text_eula_question (PkTask *task, guint request, PkResults *results)
 {
 	guint i;
 	gboolean ret;
-	gchar *printable = NULL;
 	GPtrArray *array;
-	PkEulaRequired *item;
-	gchar *package_id;
-	gchar *vendor_name;
-	gchar *license_agreement;
 	PkTaskTextPrivate *priv = PK_TASK_TEXT(task)->priv;
 
 	/* set some user data, for no reason */
@@ -190,15 +183,13 @@ pk_task_text_eula_question (PkTask *task, guint request, PkResults *results)
 	/* get data */
 	array = pk_results_get_eula_required_array (results);
 	for (i = 0; i < array->len; i++) {
+		PkEulaRequired *item;
+		g_autofree gchar *printable = NULL;
+
 		item = g_ptr_array_index (array, i);
-		g_object_get (item,
-			      "package-id", &package_id,
-			      "vendor-name", &vendor_name,
-			      "license-agreement", &license_agreement,
-			      NULL);
 
 		/* create printable */
-		printable = pk_package_id_to_printable (package_id);
+		printable = pk_package_id_to_printable (pk_eula_required_get_package_id (item));
 
 		/* TRANSLATORS: this is another name for a software licence that has to be read before installing */
 		g_print ("%s\n", _("End user licence agreement required"));
@@ -207,15 +198,10 @@ pk_task_text_eula_question (PkTask *task, guint request, PkResults *results)
 		g_print (" %s: %s\n", _("Package"), printable);
 
 		/* TRANSLATORS: the vendor (e.g. vmware) that is providing the EULA */
-		g_print (" %s: %s\n", _("Vendor"), vendor_name);
+		g_print (" %s: %s\n", _("Vendor"), pk_eula_required_get_vendor_name (item));
 
 		/* TRANSLATORS: the EULA text itself (long and boring) */
-		g_print (" %s: %s\n", _("Agreement"), license_agreement);
-
-		g_free (printable);
-		g_free (package_id);
-		g_free (vendor_name);
-		g_free (license_agreement);
+		g_print (" %s: %s\n", _("Agreement"), pk_eula_required_get_license_agreement (item));
 	}
 
 	/* TRANSLATORS: ask the user if they've read and accepted the EULA */
@@ -231,7 +217,7 @@ pk_task_text_eula_question (PkTask *task, guint request, PkResults *results)
 	g_ptr_array_unref (array);
 }
 
-/**
+/*
  * pk_task_text_media_change_question:
  **/
 static void
@@ -290,7 +276,7 @@ pk_task_text_media_change_question (PkTask *task, guint request, PkResults *resu
 	g_ptr_array_unref (array);
 }
 
-/**
+/*
  * pk_task_text_simulate_question_type_to_string:
  **/
 static const gchar *
@@ -340,8 +326,8 @@ package_sort_func (gconstpointer a, gconstpointer b)
 {
 	const gchar *package_id1;
 	const gchar *package_id2;
-	_cleanup_strv_free_ gchar **split1 = NULL;
-	_cleanup_strv_free_ gchar **split2 = NULL;
+	g_auto(GStrv) split1 = NULL;
+	g_auto(GStrv) split2 = NULL;
 
 	package_id1 = pk_package_get_id (*(PkPackage **)a);
 	package_id2 = pk_package_get_id (*(PkPackage **)b);
@@ -350,7 +336,7 @@ package_sort_func (gconstpointer a, gconstpointer b)
 	return g_strcmp0 (split1[PK_PACKAGE_ID_NAME], split2[PK_PACKAGE_ID_NAME]);
 }
 
-/**
+/*
  * pk_task_text_simulate_question:
  **/
 static void
@@ -366,8 +352,8 @@ pk_task_text_simulate_question (PkTask *task, guint request, PkResults *results)
 	PkPackage *package;
 	GPtrArray *array;
 	PkTaskTextPrivate *priv = PK_TASK_TEXT(task)->priv;
-	_cleanup_hashtable_unref_ GHashTable *table = NULL;
-	_cleanup_list_free_ GList *list = NULL;
+	g_autoptr(GHashTable) table = NULL;
+	g_autoptr(GList) list = NULL;
 
 	/* set some user data, for no reason */
 	priv->user_data = NULL;
@@ -382,7 +368,7 @@ pk_task_text_simulate_question (PkTask *task, guint request, PkResults *results)
 	table = g_hash_table_new_full (g_direct_hash, g_direct_equal,
 	                               NULL, (GDestroyNotify) g_ptr_array_unref);
 	for (i = 0; i < array->len; i++) {
-		_cleanup_array_unref_ GPtrArray *package_array = NULL;
+		g_autoptr(GPtrArray) package_array = NULL;
 
 		package = g_ptr_array_index (array, i);
 		g_object_get (package,
@@ -444,7 +430,7 @@ pk_task_text_simulate_question (PkTask *task, guint request, PkResults *results)
 	g_ptr_array_unref (array);
 }
 
-/**
+/*
  * pk_task_text_class_init:
  **/
 static void
@@ -463,7 +449,7 @@ pk_task_text_class_init (PkTaskTextClass *klass)
 	g_type_class_add_private (klass, sizeof (PkTaskTextPrivate));
 }
 
-/**
+/*
  * pk_task_text_init:
  * @task_text: This class instance
  **/
@@ -474,7 +460,7 @@ pk_task_text_init (PkTaskText *task)
 	task->priv->user_data = NULL;
 }
 
-/**
+/*
  * pk_task_text_finalize:
  * @object: The object to finalize
  **/
@@ -489,7 +475,7 @@ pk_task_text_finalize (GObject *object)
 /**
  * pk_task_text_new:
  *
- * Return value: a new PkTaskText object.
+ * Return value: a new #PkTaskText object.
  **/
 PkTaskText *
 pk_task_text_new (void)

@@ -21,9 +21,10 @@
 
 /**
  * SECTION:pk-enum
- * @short_description: Functions for converting strings to enum and vice-versa
+ * @title: Enumerations
+ * @short_description: Enumerations used in packagekit-glib2
  *
- * This file contains functions to convert to and from enumerated types.
+ * Enumerated values used in packagekit-glib2 and functions for using these.
  */
 
 #include "config.h"
@@ -88,6 +89,7 @@ static const PkEnumMatch enum_status[] = {
 	{PK_STATUS_ENUM_CHECK_EXECUTABLE_FILES,	"check-executable-files"},
 	{PK_STATUS_ENUM_CHECK_LIBRARIES,	"check-libraries"},
 	{PK_STATUS_ENUM_COPY_FILES,		"copy-files"},
+	{PK_STATUS_ENUM_RUN_HOOK,		"run-hook"},
 	{0, NULL}
 };
 
@@ -198,6 +200,7 @@ static const PkEnumMatch enum_error[] = {
 	{PK_ERROR_ENUM_CANCELLED_PRIORITY,	"cancelled-priority"},
 	{PK_ERROR_ENUM_UNFINISHED_TRANSACTION,	"unfinished-transaction"},
 	{PK_ERROR_ENUM_LOCK_REQUIRED,		"lock-required"},
+	{PK_ERROR_ENUM_REPO_ALREADY_SET,	"repo-already-set"},
 	{0, NULL}
 };
 
@@ -979,7 +982,7 @@ pk_info_enum_to_localised_text (PkInfoEnum info)
 		break;
 	case PK_INFO_ENUM_BUGFIX:
 		/* TRANSLATORS: The type of update */
-		text = dgettext("PackageKit", "Bug fix ");
+		text = dgettext("PackageKit", "Bug fix");
 		break;
 	case PK_INFO_ENUM_ENHANCEMENT:
 		/* TRANSLATORS: The type of update */
@@ -1193,7 +1196,7 @@ pk_role_enum_to_localised_present (PkRoleEnum role)
 		break;
 	case PK_ROLE_ENUM_REPO_ENABLE:
 		/* TRANSLATORS: The role of the transaction, in present tense */
-		text = dgettext("PackageKit", "Enabling repository");
+		text = dgettext("PackageKit", "Modifying repository");
 		break;
 	case PK_ROLE_ENUM_REPO_SET_DATA:
 		/* TRANSLATORS: The role of the transaction, in present tense */

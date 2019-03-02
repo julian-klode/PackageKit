@@ -38,7 +38,7 @@ pk_backend_pattern_needle (PkBackend *backend, const gchar *needle, GError **err
 static gpointer
 pk_backend_pattern_regex (PkBackend *backend, const gchar *needle, GError **error)
 {
-	_cleanup_free_ gchar *pattern = NULL;
+	g_autofree gchar *pattern = NULL;
 	g_return_val_if_fail (needle != NULL, NULL);
 	pattern = g_regex_escape_string (needle, -1);
 	return g_regex_new (pattern, G_REGEX_CASELESS, 0, error);
@@ -268,7 +268,7 @@ static gboolean
 pk_alpm_search_is_application (alpm_pkg_t *pkg) {
 	guint i;
 	alpm_filelist_t *filelist;
-	GRegex _cleanup_regex_unref_ *regex = NULL;
+	g_autoptr(GRegex) regex = NULL;
 
 	filelist = alpm_pkg_get_files (pkg);
 	regex = g_regex_new ("^usr/share/applications/.*\\.desktop$", 0, 0, NULL);
@@ -341,7 +341,7 @@ pk_backend_search_thread (PkBackendJob *job, GVariant* params, gpointer p)
 
 	const alpm_list_t *i;
 	alpm_list_t *patterns = NULL;
-	_cleanup_error_free_ GError *error = NULL;
+	g_autoptr(GError) error = NULL;
 
 	g_return_if_fail (p == NULL);
 

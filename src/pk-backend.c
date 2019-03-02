@@ -35,13 +35,8 @@
 #include <packagekit-glib2/pk-results.h>
 #include <packagekit-glib2/pk-common.h>
 
-#include "pk-cleanup.h"
 #include "pk-backend.h"
 #include "pk-shared.h"
-
-#ifdef PK_BUILD_DAEMON
-  #include "pk-network.h"
-#endif
 
 #define PK_BACKEND_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), PK_TYPE_BACKEND, PkBackendPrivate))
 
@@ -203,9 +198,6 @@ struct PkBackendPrivate
 	PkBitfield		 roles;
 	GKeyFile		*conf;
 	GFileMonitor		*monitor;
-#ifdef PK_BUILD_DAEMON
-	PkNetwork		*network;
-#endif
 	gboolean		 backend_roles_set;
 	gpointer		 user_data;
 	GHashTable		*thread_hash;
@@ -445,7 +437,7 @@ static gchar *
 pk_backend_build_library_path (PkBackend *backend, const gchar *name)
 {
 	gchar *path;
-	_cleanup_free_ gchar *filename = NULL;
+	g_autofree gchar *filename = NULL;
 #if PK_BUILD_LOCAL
 	const gchar *directory;
 #endif
@@ -492,8 +484,8 @@ pk_backend_load (PkBackend *backend, GError **error)
 	GModule *handle;
 	gboolean ret = FALSE;
 	gpointer func = NULL;
-	_cleanup_free_ gchar *backend_name = NULL;
-	_cleanup_free_ gchar *path = NULL;
+	g_autofree gchar *backend_name = NULL;
+	g_autofree gchar *path = NULL;
 
 	g_return_val_if_fail (PK_IS_BACKEND (backend), FALSE);
 	g_return_val_if_fail (pk_is_thread_default (), FALSE);
@@ -514,10 +506,11 @@ pk_backend_load (PkBackend *backend, GError **error)
 	if (backend_name == NULL)
 		return FALSE;
 
-	/* the "hawkey" backend was renamed to "hif" */
-	if (g_strcmp0 (backend_name, "hawkey") == 0) {
+	/* the "hawkey" and "hif" backends are superseded by "dnf" */
+	if (g_strcmp0 (backend_name, "hawkey") == 0 ||
+	    g_strcmp0 (backend_name, "hif") == 0) {
 		g_free (backend_name);
-		backend_name = g_strdup ("hif");
+		backend_name = g_strdup ("dnf");
 	}
 
 	g_debug ("Trying to load : %s", backend_name);
@@ -733,7 +726,7 @@ static gboolean
 pk_backend_installed_db_changed_cb (gpointer user_data)
 {
 	PkBackend *backend = PK_BACKEND (user_data);
-	_cleanup_error_free_ GError *error = NULL;
+	g_autoptr(GError) error = NULL;
 
 	if (!backend->priv->transaction_in_progress) {
 		g_debug ("invalidating offline updates");
@@ -923,19 +916,9 @@ pk_backend_bool_to_string (gboolean value)
 gboolean
 pk_backend_is_online (PkBackend *backend)
 {
-#ifdef PK_BUILD_DAEMON
-	PkNetworkEnum state;
-	g_return_val_if_fail (PK_IS_BACKEND (backend), FALSE);
-	state = pk_network_get_network_state (backend->priv->network);
-	if (state == PK_NETWORK_ENUM_ONLINE ||
-	    state == PK_NETWORK_ENUM_MOBILE ||
-	    state == PK_NETWORK_ENUM_WIFI ||
-	    state == PK_NETWORK_ENUM_WIRED)
-		return TRUE;
-	return FALSE;
-#else
-	return TRUE;
-#endif
+	GNetworkMonitor *network_monitor;
+	network_monitor = g_network_monitor_get_default ();
+	return g_network_monitor_get_network_available (network_monitor);
 }
 
 /**
@@ -955,6 +938,29 @@ pk_backend_convert_uri (const gchar *proxy)
 	    !g_str_has_prefix (proxy, "https://") &&
 	    !g_str_has_prefix (proxy, "ftp://")) {
 		g_string_prepend (string, "http://");
+	}
+
+	/* if we didn't specify a trailing slash, add one */
+	if (!g_str_has_suffix (proxy, "/"))
+		g_string_append_c (string, '/');
+
+	return g_string_free (string, FALSE);
+}
+
+/**
+ * pk_backend_convert_uri_socks:
+ *
+ * Convert a proxy string to a SOCKS URI.
+ **/
+gchar *
+pk_backend_convert_uri_socks (const gchar *proxy)
+{
+	GString *string;
+	string = g_string_new (proxy);
+
+	/* if we didn't specify a prefix, add a default one */
+	if (!g_str_has_prefix (proxy, "socks://")) {
+		g_string_prepend (string, "socks://");
 	}
 
 	/* if we didn't specify a trailing slash, add one */
@@ -1048,7 +1054,7 @@ pk_backend_get_accepted_eula_string (PkBackend *backend)
 {
 	GString *string;
 	GList *l;
-	_cleanup_list_free_ GList *keys = NULL;
+	g_autoptr(GList) keys = NULL;
 
 	g_return_val_if_fail (PK_IS_BACKEND (backend), FALSE);
 	g_return_val_if_fail (pk_is_thread_default (), FALSE);
@@ -1115,8 +1121,8 @@ pk_backend_watch_file (PkBackend *backend,
 		       PkBackendFileChanged func,
 		       gpointer data)
 {
-	_cleanup_error_free_ GError *error = NULL;
-	_cleanup_object_unref_ GFile *file = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GFile) file = NULL;
 
 	g_return_val_if_fail (PK_IS_BACKEND (backend), FALSE);
 	g_return_val_if_fail (filename != NULL, FALSE);
@@ -1160,9 +1166,6 @@ pk_backend_finalize (GObject *object)
 
 	g_free (backend->priv->name);
 
-#ifdef PK_BUILD_DAEMON
-	g_object_unref (backend->priv->network);
-#endif
 	g_key_file_unref (backend->priv->conf);
 	g_hash_table_destroy (backend->priv->eulas);
 
@@ -1903,9 +1906,6 @@ static void
 pk_backend_init (PkBackend *backend)
 {
 	backend->priv = PK_BACKEND_GET_PRIVATE (backend);
-#ifdef PK_BUILD_DAEMON
-	backend->priv->network = pk_network_new ();
-#endif
 	backend->priv->eulas = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 	backend->priv->thread_hash = g_hash_table_new_full (g_direct_hash,
 							    g_direct_equal,

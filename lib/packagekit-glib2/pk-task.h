@@ -47,6 +47,10 @@ typedef struct _PkTaskPrivate	PkTaskPrivate;
 typedef struct _PkTask		PkTask;
 typedef struct _PkTaskClass	PkTaskClass;
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(PkTask, g_object_unref)
+#endif
+
 struct _PkTask
 {
 	 PkClient		 parent;
@@ -83,7 +87,6 @@ struct _PkTaskClass
 
 GType		 pk_task_get_type			(void);
 PkTask		*pk_task_new				(void);
-void		 pk_task_test				(gpointer		 user_data);
 
 PkResults	*pk_task_generic_finish			(PkTask			*task,
 							 GAsyncResult		*res,
@@ -280,9 +283,6 @@ gboolean	 pk_task_user_declined			(PkTask			*task,
 void		 pk_task_set_simulate			(PkTask			*task,
 							 gboolean		 simulate);
 gboolean	 pk_task_get_simulate			(PkTask			*task);
-void		 pk_task_set_interactive		(PkTask			*task,
-							 gboolean		 interactive);
-gboolean	 pk_task_get_interactive		(PkTask			*task);
 void		 pk_task_set_only_download		(PkTask			*task,
 							 gboolean		 only_download);
 gboolean	 pk_task_get_only_download		(PkTask			*task);

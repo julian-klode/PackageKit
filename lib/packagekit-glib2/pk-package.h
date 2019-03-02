@@ -45,6 +45,10 @@ typedef struct _PkPackagePrivate	PkPackagePrivate;
 typedef struct _PkPackage		PkPackage;
 typedef struct _PkPackageClass		PkPackageClass;
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(PkPackage, g_object_unref)
+#endif
+
 struct _PkPackage
 {
 	 PkSource		 parent;
@@ -67,7 +71,6 @@ struct _PkPackageClass
 
 GType		 pk_package_get_type		  	(void);
 PkPackage	*pk_package_new				(void);
-void		 pk_package_test			(gpointer	 user_data);
 
 gboolean	 pk_package_set_id			(PkPackage	*package,
 							 const gchar	*package_id,

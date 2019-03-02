@@ -21,8 +21,6 @@
 
 #include "config.h"
 
-#include "src/pk-cleanup.h"
-
 #include <packagekit-glib2/pk-enum.h>
 #include <packagekit-glib2/pk-results.h>
 #include <packagekit-glib2/pk-package-id.h>
@@ -45,7 +43,7 @@ struct _PkTaskWrapperPrivate
 
 G_DEFINE_TYPE (PkTaskWrapper, pk_task_wrapper, PK_TYPE_TASK)
 
-/**
+/*
  * pk_task_wrapper_untrusted_question:
  **/
 static void
@@ -62,7 +60,7 @@ pk_task_wrapper_untrusted_question (PkTask *task, guint request, PkResults *resu
 	pk_task_user_accepted (task, request);
 }
 
-/**
+/*
  * pk_task_wrapper_key_question:
  **/
 static void
@@ -77,7 +75,7 @@ pk_task_wrapper_key_question (PkTask *task, guint request, PkResults *results)
 	pk_task_user_accepted (task, request);
 }
 
-/**
+/*
  * pk_task_wrapper_eula_question:
  **/
 static void
@@ -92,7 +90,7 @@ pk_task_wrapper_eula_question (PkTask *task, guint request, PkResults *results)
 	pk_task_user_accepted (task, request);
 }
 
-/**
+/*
  * pk_task_wrapper_media_change_question:
  **/
 static void
@@ -107,7 +105,7 @@ pk_task_wrapper_media_change_question (PkTask *task, guint request, PkResults *r
 	pk_task_user_accepted (task, request);
 }
 
-/**
+/*
  * pk_task_wrapper_simulate_question:
  **/
 static void
@@ -117,8 +115,8 @@ pk_task_wrapper_simulate_question (PkTask *task, guint request, PkResults *resul
 	const gchar *package_id;
 	PkPackage *package;
 	PkTaskWrapperPrivate *priv = PK_TASK_WRAPPER(task)->priv;
-	_cleanup_object_unref_ PkPackageSack *sack = NULL;
-	_cleanup_ptrarray_unref_ GPtrArray *array = NULL;
+	g_autoptr(PkPackageSack) sack = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 
 	/* set some user data, for no reason */
 	priv->user_data = NULL;
@@ -129,7 +127,7 @@ pk_task_wrapper_simulate_question (PkTask *task, guint request, PkResults *resul
 	/* print data */
 	array = pk_package_sack_get_array (sack);
 	for (i = 0; i < array->len; i++) {
-		_cleanup_free_ gchar *printable = NULL;
+		g_autofree gchar *printable = NULL;
 		package = g_ptr_array_index (array, i);
 		package_id = pk_package_get_id (package);
 		printable = pk_package_id_to_printable (package_id);
@@ -141,7 +139,7 @@ pk_task_wrapper_simulate_question (PkTask *task, guint request, PkResults *resul
 	pk_task_user_accepted (task, request);
 }
 
-/**
+/*
  * pk_task_wrapper_class_init:
  **/
 static void
@@ -160,7 +158,7 @@ pk_task_wrapper_class_init (PkTaskWrapperClass *klass)
 	g_type_class_add_private (klass, sizeof (PkTaskWrapperPrivate));
 }
 
-/**
+/*
  * pk_task_wrapper_init:
  * @task_wrapper: This class instance
  **/
@@ -171,7 +169,7 @@ pk_task_wrapper_init (PkTaskWrapper *task)
 	task->priv->user_data = NULL;
 }
 
-/**
+/*
  * pk_task_wrapper_finalize:
  * @object: The object to finalize
  **/
@@ -186,7 +184,7 @@ pk_task_wrapper_finalize (GObject *object)
 /**
  * pk_task_wrapper_new:
  *
- * Return value: a new PkTaskWrapper object.
+ * Return value: a new #PkTaskWrapper object.
  **/
 PkTaskWrapper *
 pk_task_wrapper_new (void)

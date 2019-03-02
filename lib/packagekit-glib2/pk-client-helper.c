@@ -52,8 +52,6 @@
 #include <gio/gio.h>
 #include <gio/gunixsocketaddress.h>
 
-#include "src/pk-cleanup.h"
-
 #include <packagekit-glib2/pk-client-helper.h>
 
 static void     pk_client_helper_finalize	(GObject     *object);
@@ -155,7 +153,7 @@ out:
 	return ret;
 }
 
-/**
+/*
  * pk_client_helper_copy_stdout_cb:
  **/
 static gboolean
@@ -167,7 +165,7 @@ pk_client_helper_copy_stdout_cb (GIOChannel *source, GIOCondition condition, PkC
 	GIOStatus status;
 	gboolean ret = TRUE;
 	PkClientHelperPrivate *priv = client_helper->priv;
-	_cleanup_error_free_ GError *error = NULL;
+	g_autoptr(GError) error = NULL;
 
 	/* the helper process exited */
 	if ((condition & G_IO_HUP) > 0) {
@@ -223,7 +221,7 @@ pk_client_helper_copy_stdout_cb (GIOChannel *source, GIOCondition condition, PkC
 	return TRUE;
 }
 
-/**
+/*
  * pk_client_helper_echo_stderr_cb:
  **/
 static gboolean
@@ -254,7 +252,7 @@ out:
 	return ret;
 }
 
-/**
+/*
  * pk_client_helper_copy_conn_cb:
  **/
 static gboolean
@@ -266,7 +264,7 @@ pk_client_helper_copy_conn_cb (GIOChannel *source, GIOCondition condition, PkCli
 	GIOStatus status;
 	gsize written = 0;
 	gboolean ret = TRUE;
-	_cleanup_error_free_ GError *error = NULL;
+	g_autoptr(GError) error = NULL;
 
 	/* package manager is done processing a package */
 	if ((condition & G_IO_HUP) > 0) {
@@ -309,7 +307,7 @@ pk_client_helper_copy_conn_cb (GIOChannel *source, GIOCondition condition, PkCli
 	return TRUE;
 }
 
-/**
+/*
  * pk_client_helper_accept_connection_cb:
  **/
 static gboolean
@@ -322,7 +320,7 @@ pk_client_helper_accept_connection_cb (GIOChannel *source, GIOCondition conditio
 	gint standard_error = 0;
 	gint fd;
 	GIOStatus status;
-	_cleanup_error_free_ GError *error = NULL;
+	g_autoptr(GError) error = NULL;
 
 	/* delaying connection */
 	if (priv->active_conn != NULL)
@@ -428,8 +426,8 @@ pk_client_helper_start (PkClientHelper *client_helper,
 	gboolean use_kde_helper = FALSE;
 	gint fd;
 	PkClientHelperPrivate *priv = client_helper->priv;
-	_cleanup_error_free_ GError *error_local = NULL;
-	_cleanup_object_unref_ GSocketAddress *address = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GSocketAddress) address = NULL;
 
 	g_return_val_if_fail (PK_IS_CLIENT_HELPER (client_helper), FALSE);
 	g_return_val_if_fail (socket_filename != NULL, FALSE);
@@ -506,7 +504,7 @@ pk_client_helper_start (PkClientHelper *client_helper,
 	return TRUE;
 }
 
-/**
+/*
  * pk_client_helper_class_init:
  **/
 static void
@@ -517,7 +515,7 @@ pk_client_helper_class_init (PkClientHelperClass *klass)
 	g_type_class_add_private (klass, sizeof (PkClientHelperPrivate));
 }
 
-/**
+/*
  * pk_client_helper_init:
  **/
 static void
@@ -526,7 +524,7 @@ pk_client_helper_init (PkClientHelper *client_helper)
 	client_helper->priv = PK_CLIENT_HELPER_GET_PRIVATE (client_helper);
 }
 
-/**
+/*
  * pk_client_helper_finalize:
  **/
 static void
@@ -556,7 +554,7 @@ pk_client_helper_finalize (GObject *object)
 /**
  * pk_client_helper_new:
  *
- * Return value: a new PkClientHelper object.
+ * Return value: a new #PkClientHelper object.
  *
  * Since: 0.6.10
  **/

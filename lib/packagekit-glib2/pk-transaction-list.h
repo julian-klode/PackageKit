@@ -41,6 +41,10 @@ typedef struct _PkTransactionListPrivate	PkTransactionListPrivate;
 typedef struct _PkTransactionList		PkTransactionList;
 typedef struct _PkTransactionListClass		PkTransactionListClass;
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(PkTransactionList, g_object_unref)
+#endif
+
 struct _PkTransactionList
 {
 	GObject				 parent;
@@ -58,7 +62,6 @@ struct _PkTransactionListClass
 
 GType			 pk_transaction_list_get_type		(void);
 PkTransactionList	*pk_transaction_list_new		(void);
-void			 pk_transaction_list_test		(gpointer	 user_data);
 
 gchar			**pk_transaction_list_get_ids		(PkTransactionList	*tlist);
 

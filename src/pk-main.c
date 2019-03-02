@@ -33,7 +33,6 @@
 #include <glib/gi18n.h>
 #include <packagekit-glib2/pk-debug.h>
 
-#include "pk-cleanup.h"
 #include "pk-engine.h"
 #include "pk-shared.h"
 #include "pk-transaction.h"
@@ -115,11 +114,11 @@ main (int argc, char *argv[])
 	gboolean keep_environment = FALSE;
 	gint exit_idle_time;
 	guint timer_id = 0;
-	_cleanup_error_free_ GError *error = NULL;
-	_cleanup_free_ gchar *backend_name = NULL;
-	_cleanup_free_ gchar *conf_filename = NULL;
-	_cleanup_keyfile_unref_ GKeyFile *conf = NULL;
-	_cleanup_object_unref_ PkEngine *engine = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *backend_name = NULL;
+	g_autofree gchar *conf_filename = NULL;
+	g_autoptr(GKeyFile) conf = NULL;
+	g_autoptr(PkEngine) engine = NULL;
 
 	const GOptionEntry options[] = {
 		{ "backend", '\0', 0, G_OPTION_ARG_STRING, &backend_name,
@@ -149,10 +148,6 @@ main (int argc, char *argv[])
 	textdomain (GETTEXT_PACKAGE);
 	openlog ("PackageKit", LOG_NDELAY, LOG_USER);
 
-#if (GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 35)
-	g_type_init ();
-#endif
-
 	/* set the default thread explicitly */
 	pk_is_thread_default ();
 
@@ -178,10 +173,14 @@ main (int argc, char *argv[])
 	/* get values from the config file */
 	conf = g_key_file_new ();
 	conf_filename = pk_util_get_config_filename ();
+	if (conf_filename == NULL) {
+		g_printerr ("Config file was not found.");
+		goto out;
+	}
 	ret = g_key_file_load_from_file (conf, conf_filename,
 					 G_KEY_FILE_NONE, &error);
 	if (!ret) {
-		g_print ("Failed to load config file: %s", error->message);
+		g_printerr ("Failed to load config file: %s", error->message);
 		goto out;
 	}
 	g_key_file_set_boolean (conf, "Daemon", "KeepEnvironment", keep_environment);
@@ -206,7 +205,7 @@ main (int argc, char *argv[])
 	if (backend_name == NULL || g_strcmp0 (backend_name, "auto") == 0) {
 		ret  = pk_util_set_auto_backend (conf, &error);
 		if (!ret) {
-			g_print ("Failed to resolve auto: %s", error->message);
+			g_printerr ("Failed to resolve auto: %s", error->message);
 			goto out;
 		}
 	}
@@ -229,7 +228,7 @@ main (int argc, char *argv[])
 	ret = pk_engine_load_backend (engine, &error);
 	if (!ret) {
 		/* TRANSLATORS: cannot load the backend the user specified */
-		g_print ("Failed to load the backend: %s", error->message);
+		g_printerr ("Failed to load the backend: %s", error->message);
 		goto out;
 	}
 

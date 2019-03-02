@@ -46,6 +46,10 @@ typedef struct _PkPackageSack		PkPackageSack;
 typedef struct _PkPackageSackClass	PkPackageSackClass;
 typedef struct _PkPackageSackResults	PkPackageSackResults;
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(PkPackageSack, g_object_unref)
+#endif
+
 struct _PkPackageSack
 {
 	 GObject		 parent;
@@ -66,6 +70,16 @@ struct _PkPackageSackClass
 	void (*_pk_reserved5) (void);
 };
 
+/**
+ * PkPackageSackSortType:
+ * @PK_PACKAGE_SACK_SORT_TYPE_NAME: Sort by name
+ * @PK_PACKAGE_SACK_SORT_TYPE_INFO: Sort by package info
+ * @PK_PACKAGE_SACK_SORT_TYPE_PACKAGE_ID: Sort by package ID
+ * @PK_PACKAGE_SACK_SORT_TYPE_SUMMARY: Sort by summary
+ * @PK_PACKAGE_SACK_SORT_TYPE_LAST:
+ *
+ * Type of sort to perform.
+ **/
 typedef enum {
 	PK_PACKAGE_SACK_SORT_TYPE_NAME,
 	PK_PACKAGE_SACK_SORT_TYPE_INFO,
@@ -76,8 +90,16 @@ typedef enum {
 
 GType		 pk_package_sack_get_type		(void);
 PkPackageSack	*pk_package_sack_new			(void);
-void		 pk_package_sack_test			(gpointer		 user_data);
 
+/**
+ * PkPackageSackFilterFunc:
+ * @package: the package being considered
+ * @user_data: User data supplied when the callback was registered
+ *
+ * Function to filter packages in #PkPackageSack.
+ *
+ * Return value: %TRUE if @package should remain in the sack.
+ */
 typedef gboolean (*PkPackageSackFilterFunc)		(PkPackage		*package,
 							 gpointer		 user_data);
 

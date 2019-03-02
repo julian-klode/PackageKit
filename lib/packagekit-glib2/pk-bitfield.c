@@ -21,16 +21,13 @@
 
 /**
  * SECTION:pk-bitfield
- * @short_description: Functions for converting strings to enum and vice-versa
+ * @title: PkBitfield
+ * @short_description: Bitfield object
  *
- * This file contains functions to convert to and from enumerated types.
+ * #PkBitfield provides a method of using enumerations in a bitfield.
  */
 
 #include "config.h"
-
-#include "src/pk-cleanup.h"
-
-#include "src/pk-cleanup.h"
 
 #include <glib.h>
 #include <packagekit-glib2/pk-enum.h>
@@ -39,7 +36,8 @@
 /**
  * pk_bitfield_contain_priority:
  * @values: a valid bitfield instance
- * @value: the values we are searching for
+ * @value: the first value we are searching for
+ * @...: additional values to search for, terminated by -1
  *
  * Finds elements in a list, but with priority going to the preceeding entry
  *
@@ -79,9 +77,12 @@ pk_bitfield_contain_priority (PkBitfield values, gint value, ...)
 
 /**
  * pk_bitfield_from_enums:
- * @value: the values we want to add to the bitfield
+ * @value: the first value we want to add to the bitfield
+ * @...: other values to add, terminated by -1
  *
- * Return value: The return bitfield, or 0 if invalid
+ * Create a bitfield with the suppied values set.
+ *
+ * Return value: a #PkBitfield, or 0 if invalid
  *
  * Since: 0.5.2
  **/
@@ -159,7 +160,7 @@ pk_role_bitfield_from_string (const gchar *roles)
 	guint length;
 	guint i;
 	PkRoleEnum role;
-	_cleanup_strv_free_ gchar **split = NULL;
+	g_auto(GStrv) split = NULL;
 
 	split = g_strsplit (roles, ";", 0);
 	if (split == NULL) {
@@ -177,7 +178,7 @@ pk_role_bitfield_from_string (const gchar *roles)
 }
 
 /**
- * pk_groups_bitfield_to_string:
+ * pk_group_bitfield_to_string:
  * @groups: The enumerated type values
  *
  * Converts a enumerated type bitfield to its text representation
@@ -226,7 +227,7 @@ pk_group_bitfield_from_string (const gchar *groups)
 	guint length;
 	guint i;
 	PkGroupEnum group;
-	_cleanup_strv_free_ gchar **split = NULL;
+	g_auto(GStrv) split = NULL;
 
 	split = g_strsplit (groups, ";", 0);
 	if (split == NULL) {
@@ -297,7 +298,7 @@ pk_filter_bitfield_from_string (const gchar *filters)
 	guint length;
 	guint i;
 	PkFilterEnum filter;
-	_cleanup_strv_free_ gchar **split = NULL;
+	g_auto(GStrv) split = NULL;
 
 	split = g_strsplit (filters, ";", 0);
 	if (split == NULL) {
@@ -368,7 +369,7 @@ pk_transaction_flag_bitfield_from_string (const gchar *transaction_flags)
 	guint length;
 	guint i;
 	PkFilterEnum transaction_flag;
-	_cleanup_strv_free_ gchar **split = NULL;
+	g_auto(GStrv) split = NULL;
 
 	split = g_strsplit (transaction_flags, ";", 0);
 	if (split == NULL) {

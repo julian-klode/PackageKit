@@ -63,6 +63,74 @@ enum {
 G_DEFINE_TYPE (PkEulaRequired, pk_eula_required, PK_TYPE_SOURCE)
 
 /**
+ * pk_eula_required_get_eula_id:
+ * @eula_required: a valid #PkEulaRequired instance.
+ *
+ * Get the ID for this EULA
+ *
+ * Return value: an ID
+ *
+ * Since: 1.1.8
+ */
+const gchar *
+pk_eula_required_get_eula_id (PkEulaRequired *eula_required)
+{
+	g_return_val_if_fail (PK_IS_EULA_REQUIRED (eula_required), NULL);
+	return eula_required->priv->eula_id;
+}
+
+/**
+ * pk_eula_required_get_package_id:
+ * @eula_required: a valid #PkEulaRequired instance.
+ *
+ * Get the PackageID this EULA is for
+ *
+ * Return value: a PackageID
+ *
+ * Since: 1.1.8
+ */
+const gchar *
+pk_eula_required_get_package_id (PkEulaRequired *eula_required)
+{
+	g_return_val_if_fail (PK_IS_EULA_REQUIRED (eula_required), NULL);
+	return eula_required->priv->package_id;
+}
+
+/**
+ * pk_eula_required_get_vendor_name:
+ * @eula_required: a valid #PkEulaRequired instance.
+ *
+ * Get the vendor this EULA is from.
+ *
+ * Return value: license vendor name
+ *
+ * Since: 1.1.8
+ */
+const gchar *
+pk_eula_required_get_vendor_name (PkEulaRequired *eula_required)
+{
+	g_return_val_if_fail (PK_IS_EULA_REQUIRED (eula_required), NULL);
+	return eula_required->priv->vendor_name;
+}
+
+/**
+ * pk_eula_required_get_license_agreement:
+ * @eula_required: a valid #PkEulaRequired instance.
+ *
+ * Get the text of the license agreement.
+ *
+ * Return value: license agreement text
+ *
+ * Since: 1.1.8
+ **/
+const gchar *
+pk_eula_required_get_license_agreement (PkEulaRequired *eula_required)
+{
+	g_return_val_if_fail (PK_IS_EULA_REQUIRED (eula_required), NULL);
+	return eula_required->priv->license_agreement;
+}
+
+/*
  * pk_eula_required_get_property:
  **/
 static void
@@ -90,7 +158,7 @@ pk_eula_required_get_property (GObject *object, guint prop_id, GValue *value, GP
 	}
 }
 
-/**
+/*
  * pk_eula_required_set_property:
  **/
 static void
@@ -122,7 +190,7 @@ pk_eula_required_set_property (GObject *object, guint prop_id, const GValue *val
 	}
 }
 
-/**
+/*
  * pk_eula_required_class_init:
  **/
 static void
@@ -137,6 +205,8 @@ pk_eula_required_class_init (PkEulaRequiredClass *klass)
 	/**
 	 * PkEulaRequired:eula-id:
 	 *
+         * ID for this EULA.
+         *
 	 * Since: 0.5.4
 	 */
 	pspec = g_param_spec_string ("eula-id", NULL, NULL,
@@ -147,6 +217,8 @@ pk_eula_required_class_init (PkEulaRequiredClass *klass)
 	/**
 	 * PkEulaRequired:package-id:
 	 *
+         * PackageID this EULA is for.
+         *
 	 * Since: 0.5.4
 	 */
 	pspec = g_param_spec_string ("package-id", NULL, NULL,
@@ -157,6 +229,8 @@ pk_eula_required_class_init (PkEulaRequiredClass *klass)
 	/**
 	 * PkEulaRequired:vendor-name:
 	 *
+         * Vendor this EULA is from.
+         *
 	 * Since: 0.5.4
 	 */
 	pspec = g_param_spec_string ("vendor-name", NULL, NULL,
@@ -167,6 +241,8 @@ pk_eula_required_class_init (PkEulaRequiredClass *klass)
 	/**
 	 * PkEulaRequired:license-agreement:
 	 *
+         * The text of the license agreement.
+         *
 	 * Since: 0.5.4
 	 */
 	pspec = g_param_spec_string ("license-agreement", NULL, NULL,
@@ -177,7 +253,7 @@ pk_eula_required_class_init (PkEulaRequiredClass *klass)
 	g_type_class_add_private (klass, sizeof (PkEulaRequiredPrivate));
 }
 
-/**
+/*
  * pk_eula_required_init:
  **/
 static void
@@ -186,7 +262,7 @@ pk_eula_required_init (PkEulaRequired *eula_required)
 	eula_required->priv = PK_EULA_REQUIRED_GET_PRIVATE (eula_required);
 }
 
-/**
+/*
  * pk_eula_required_finalize:
  **/
 static void
@@ -206,7 +282,7 @@ pk_eula_required_finalize (GObject *object)
 /**
  * pk_eula_required_new:
  *
- * Return value: a new PkEulaRequired object.
+ * Return value: a new #PkEulaRequired object.
  *
  * Since: 0.5.4
  **/

@@ -26,6 +26,8 @@
 #include "pk-alpm-packages.h"
 #include "pk-alpm-transaction.h"
 
+#include <syslog.h>
+
 static off_t dcomplete = 0;
 static off_t dtotal = 0;
 
@@ -81,7 +83,7 @@ pk_alpm_transaction_download_end (PkBackendJob *job)
 
 	/* tell DownloadPackages what files were downloaded */
 	if (dfiles != NULL) {
-		_cleanup_free_ gchar *package_id = pk_alpm_pkg_build_id (dpkg);
+		g_autofree gchar *package_id = pk_alpm_pkg_build_id (dpkg);
 		pk_backend_job_files (job, package_id, &dfiles->str);
 		g_string_free (dfiles, TRUE);
 	}
@@ -103,7 +105,7 @@ pk_alpm_transaction_download_start (PkBackendJob *job, const gchar *basename)
 	if (dpkg != NULL) {
 		if (pk_alpm_pkg_has_basename (backend, dpkg, basename)) {
 			if (dfiles != NULL) {
-				_cleanup_free_ gchar *path = NULL;
+				g_autofree gchar *path = NULL;
 				path = pk_alpm_resolve_path (job, basename);
 				g_string_append_printf (dfiles, ";%s", path);
 			}
@@ -130,7 +132,7 @@ pk_alpm_transaction_download_start (PkBackendJob *job, const gchar *basename)
 
 	/* start collecting files for the new package */
 	if (pk_backend_job_get_role (job) == PK_ROLE_ENUM_DOWNLOAD_PACKAGES) {
-		_cleanup_free_ gchar *path = NULL;
+		g_autofree gchar *path = NULL;
 		path = pk_alpm_resolve_path (job, basename);
 		dfiles = g_string_new (path);
 	}
@@ -211,7 +213,7 @@ pk_alpm_transaction_progress_cb (alpm_progress_t type, const gchar *target,
 	}
 
 	if (current < 1 || targets < current)
-		g_warning ("TODO: CURRENT/TARGETS FAILED for %d", type);
+		syslog (LOG_DAEMON | LOG_WARNING, "TODO: CURRENT/TARGETS FAILED for %d", type);
 
 	g_return_if_fail (target != NULL);
 	g_return_if_fail (0 <= percent && percent <= 100);
@@ -236,12 +238,12 @@ pk_alpm_transaction_progress_cb (alpm_progress_t type, const gchar *target,
 		pk_backend_job_set_percentage (job, overall / targets);
 		recent = percent;
 
-		g_debug ("%d%% of %s complete (%zu of %zu)", percent,
+		syslog (LOG_DAEMON | LOG_WARNING, "%d%% of %s complete (%zu of %zu)", percent,
 			 target, current, targets);
 		break;
 
 	default:
-		g_warning ("unknown progress type %d", type);
+		syslog (LOG_DAEMON | LOG_WARNING, "unknown progress type %d", type);
 		break;
 	}
 }
@@ -249,7 +251,7 @@ pk_alpm_transaction_progress_cb (alpm_progress_t type, const gchar *target,
 static void
 pk_alpm_install_ignorepkg (PkBackendJob *job, alpm_question_install_ignorepkg_t *q)
 {
-	_cleanup_free_ gchar *output = NULL;
+	g_autofree gchar *output = NULL;
 
 	g_return_if_fail (q != NULL);
 	g_return_if_fail (q->pkg != NULL);
@@ -274,7 +276,7 @@ static void
 pk_alpm_select_provider (const alpm_list_t *providers,
 			    alpm_depend_t *depend)
 {
-	_cleanup_free_ gchar *output = NULL;
+	g_autofree gchar *output = NULL;
 
 	g_return_if_fail (depend != NULL);
 	g_return_if_fail (providers != NULL);
@@ -342,7 +344,7 @@ pk_alpm_transaction_conv_cb (alpm_question_t *question)
 		break;
 
 	default:
-		g_warning ("unknown question %d", question->type);
+		syslog (LOG_DAEMON | LOG_WARNING, "unknown question %d", question->type);
 		break;
 	}
 }
@@ -392,6 +394,23 @@ pk_alpm_transaction_dep_resolve (PkBackendJob *job)
 }
 
 static void
+pk_alpm_transaction_hook (PkBackendJob *job)
+{
+	pk_backend_job_set_status (job, PK_STATUS_ENUM_RUN_HOOK);
+	pk_backend_job_set_percentage (job, 0);
+}
+
+static void
+pk_alpm_transaction_hook_run (PkBackendJob *job, alpm_event_hook_run_t * event)
+{
+	/* Every hook runs a single command, so there is no progress.
+	   Instead calculate the progress from total and finished hooks. */
+	pk_backend_job_set_percentage (job, 100 * event->position / event->total);
+	syslog (LOG_DAEMON | LOG_WARNING, "Hook %s (%s) complete (%zu of %zu)",
+		event->name, event->desc, event->position, event->total);
+}
+
+static void
 pk_alpm_transaction_test_commit (PkBackendJob *job)
 {
 	pk_backend_job_set_status (job, PK_STATUS_ENUM_TEST_COMMIT);
@@ -430,7 +449,7 @@ pk_alpm_transaction_add_done (PkBackendJob *job, alpm_pkg_t *pkg)
 
 		for (i = optdepends; i != NULL; i = i->next) {
 			char *depend = alpm_dep_compute_string (i->data);
-			_cleanup_free_ gchar *output = g_strdup_printf ("%s\n", depend);
+			g_autofree gchar *output = g_strdup_printf ("%s\n", depend);
 			free (depend);
 			pk_alpm_transaction_output (output);
 		}
@@ -531,7 +550,7 @@ pk_alpm_transaction_process_new_optdepends (alpm_pkg_t *pkg, alpm_pkg_t *old)
 
 	for (i = optdepends; i != NULL; i = i->next) {
 		char *depend = alpm_dep_compute_string (i->data);
-		_cleanup_free_ gchar *output = g_strdup_printf ("%s\n", depend);
+		g_autofree gchar *output = g_strdup_printf ("%s\n", depend);
 		free (depend);
 		pk_alpm_transaction_output (output);
 	}
@@ -548,17 +567,17 @@ pk_alpm_transaction_upgrade_done (PkBackendJob *job, alpm_pkg_t *pkg,
 	const gchar *name, *pre, *post;
 
 	g_return_if_fail (pkg != NULL);
-	g_return_if_fail (old != NULL || direction == 0);
+	g_return_if_fail (old != NULL || direction == ALPM_PACKAGE_REINSTALL);
 
 	name = alpm_pkg_get_name (pkg);
-	if (direction != 0)
+	if (direction != ALPM_PACKAGE_REINSTALL)
 		pre = alpm_pkg_get_version (old);
 	post = alpm_pkg_get_version (pkg);
 
-	if (direction > 0) {
+	if (direction == ALPM_PACKAGE_UPGRADE) {
 		alpm_logaction (priv->alpm, PK_LOG_PREFIX, "upgraded %s (%s -> %s)\n",
 				name, pre, post);
-	} else if (direction < 0) {
+	} else if (direction == ALPM_PACKAGE_DOWNGRADE) {
 		alpm_logaction (priv->alpm, PK_LOG_PREFIX,
 				"downgraded %s (%s -> %s)\n", name, pre, post);
 	} else {
@@ -567,7 +586,7 @@ pk_alpm_transaction_upgrade_done (PkBackendJob *job, alpm_pkg_t *pkg,
 	}
 	pk_alpm_pkg_emit (job, pkg, PK_INFO_ENUM_FINISHED);
 
-	if (direction != 0)
+	if (direction != ALPM_PACKAGE_REINSTALL)
 		pk_alpm_transaction_process_new_optdepends (pkg, old);
 	pk_alpm_transaction_output_end ();
 }
@@ -601,7 +620,7 @@ pk_alpm_transaction_optdepend_removal (PkBackendJob *job, alpm_pkg_t *pkg,
 					   alpm_depend_t *optdepend)
 {
 	char *depend = NULL;
-	_cleanup_free_ gchar *output = NULL;
+	g_autofree gchar *output = NULL;
 
 	g_return_if_fail (pkg != NULL);
 	g_return_if_fail (optdepend != NULL);
@@ -628,10 +647,10 @@ pk_alpm_transaction_event_cb (alpm_event_t *event)
 	case ALPM_EVENT_RESOLVEDEPS_START:
 		pk_alpm_transaction_dep_resolve (job);
 		break;
-	case ALPM_EVENT_FILECONFLICTS_START:
-	case ALPM_EVENT_INTERCONFLICTS_START:
 	case ALPM_EVENT_DELTA_INTEGRITY_START:
 	case ALPM_EVENT_DISKSPACE_START:
+	case ALPM_EVENT_FILECONFLICTS_START:
+	case ALPM_EVENT_INTERCONFLICTS_START:
 		pk_alpm_transaction_test_commit (job);
 		break;
 	case ALPM_EVENT_PACKAGE_OPERATION_START:
@@ -663,13 +682,13 @@ pk_alpm_transaction_event_cb (alpm_event_t *event)
 					pk_alpm_transaction_remove_done (job, e->oldpkg);
 					break;
 				case ALPM_PACKAGE_UPGRADE:
-					pk_alpm_transaction_upgrade_done (job, e->newpkg, e->oldpkg, 1);
+					pk_alpm_transaction_upgrade_done (job, e->newpkg, e->oldpkg, ALPM_PACKAGE_UPGRADE);
 					break;
 				case ALPM_PACKAGE_DOWNGRADE:
-					pk_alpm_transaction_upgrade_done (job, e->newpkg, e->oldpkg, -1);
+					pk_alpm_transaction_upgrade_done (job, e->newpkg, e->oldpkg, ALPM_PACKAGE_DOWNGRADE);
 					break;
 				case ALPM_PACKAGE_REINSTALL:
-					pk_alpm_transaction_upgrade_done (job, e->newpkg, e->oldpkg, 0);
+					pk_alpm_transaction_upgrade_done (job, e->newpkg, e->oldpkg, ALPM_PACKAGE_REINSTALL);
 					break;
 			}
 		}
@@ -688,6 +707,7 @@ pk_alpm_transaction_event_cb (alpm_event_t *event)
 	case ALPM_EVENT_SCRIPTLET_INFO:
 		pk_alpm_transaction_output (((alpm_event_scriptlet_info_t *) event)->line);
 		break;
+	case ALPM_EVENT_KEY_DOWNLOAD_START:
 	case ALPM_EVENT_RETRIEVE_START:
 		pk_alpm_transaction_download (job);
 		break;
@@ -698,26 +718,42 @@ pk_alpm_transaction_event_cb (alpm_event_t *event)
 			pk_alpm_transaction_optdepend_removal (job, e->pkg, e->optdep);
 		}
 		break;
+	case ALPM_EVENT_HOOK_START:
+		pk_alpm_transaction_hook (job);
+		break;
+	case ALPM_EVENT_HOOK_RUN_DONE:
+		pk_alpm_transaction_hook_run (job, (alpm_event_hook_run_t *)event);
+		break;
 	case ALPM_EVENT_CHECKDEPS_DONE:
-	case ALPM_EVENT_FILECONFLICTS_DONE:
-	case ALPM_EVENT_RESOLVEDEPS_DONE:
-	case ALPM_EVENT_INTERCONFLICTS_DONE:
-	case ALPM_EVENT_INTEGRITY_DONE:
-	case ALPM_EVENT_LOAD_DONE:
+	case ALPM_EVENT_DATABASE_MISSING:
 	case ALPM_EVENT_DELTA_INTEGRITY_DONE:
-	case ALPM_EVENT_DELTA_PATCHES_DONE:
 	case ALPM_EVENT_DELTA_PATCH_DONE:
+	case ALPM_EVENT_DELTA_PATCHES_DONE:
 	case ALPM_EVENT_DELTA_PATCH_FAILED:
 	case ALPM_EVENT_DISKSPACE_DONE:
-	case ALPM_EVENT_DATABASE_MISSING:
-	case ALPM_EVENT_KEYRING_DONE:
-	case ALPM_EVENT_KEY_DOWNLOAD_START:
+	case ALPM_EVENT_FILECONFLICTS_DONE:
+	case ALPM_EVENT_HOOK_DONE:
+	case ALPM_EVENT_HOOK_RUN_START:
+	case ALPM_EVENT_INTEGRITY_DONE:
+	case ALPM_EVENT_INTERCONFLICTS_DONE:
 	case ALPM_EVENT_KEY_DOWNLOAD_DONE:
+	case ALPM_EVENT_KEYRING_DONE:
+	case ALPM_EVENT_LOAD_DONE:
+	case ALPM_EVENT_PACNEW_CREATED:
+	case ALPM_EVENT_PACSAVE_CREATED:
+	case ALPM_EVENT_PKGDOWNLOAD_DONE:
+	case ALPM_EVENT_PKGDOWNLOAD_FAILED:
+	case ALPM_EVENT_PKGDOWNLOAD_START:
+	case ALPM_EVENT_RESOLVEDEPS_DONE:
+	case ALPM_EVENT_RETRIEVE_DONE:
+	case ALPM_EVENT_RETRIEVE_FAILED:
+	case ALPM_EVENT_TRANSACTION_DONE:
+	case ALPM_EVENT_TRANSACTION_START:
 		/* ignored */
 		break;
 
 	default:
-		g_debug ("unhandled event %d", event->type);
+		syslog (LOG_DAEMON | LOG_WARNING, "unhandled event %d", event->type);
 		break;
 	}
 }
@@ -906,7 +942,7 @@ pk_alpm_transaction_simulate (PkBackendJob *job, GError **error)
 	PkBackend *backend = pk_backend_job_get_backend (job);
 	PkBackendAlpmPrivate *priv = pk_backend_get_user_data (backend);
 	alpm_list_t *data = NULL;
-	_cleanup_free_ gchar *prefix = NULL;
+	g_autofree gchar *prefix = NULL;
 
 	if (alpm_trans_prepare (priv->alpm, &data) >= 0)
 		return TRUE;
@@ -933,7 +969,7 @@ pk_alpm_transaction_simulate (PkBackendJob *job, GError **error)
 		break;
 	default:
 		if (data != NULL)
-			g_warning ("unhandled error %d", alpm_errno (priv->alpm));
+			syslog (LOG_DAEMON | LOG_WARNING, "unhandled error %d", alpm_errno (priv->alpm));
 		break;
 	}
 
@@ -1014,7 +1050,7 @@ pk_alpm_transaction_commit (PkBackendJob *job, GError **error)
 	PkBackend *backend = pk_backend_job_get_backend (job);
 	PkBackendAlpmPrivate *priv = pk_backend_get_user_data (backend);
 	alpm_list_t *data = NULL;
-	_cleanup_free_ gchar *prefix = NULL;
+	g_autofree gchar *prefix = NULL;
 	gint commit_result;
 
 	if (pk_backend_job_is_cancelled (job))
@@ -1042,7 +1078,7 @@ pk_alpm_transaction_commit (PkBackendJob *job, GError **error)
 		break;
 	default:
 		if (data != NULL) {
-			g_warning ("unhandled error %d",
+			syslog (LOG_DAEMON | LOG_WARNING, "unhandled error %d",
 				   alpm_errno (priv->alpm));
 		}
 		break;

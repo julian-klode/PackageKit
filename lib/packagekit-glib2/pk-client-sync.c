@@ -39,7 +39,7 @@ typedef struct {
 	PkProgress	*progress;
 } PkClientHelper;
 
-/**
+/*
  * pk_client_generic_finish_sync:
  **/
 static void
@@ -48,7 +48,7 @@ pk_client_generic_finish_sync (PkClient *client, GAsyncResult *res, PkClientHelp
 	PkResults *results;
 	results = pk_client_generic_finish (client, res, helper->error);
 	if (results != NULL) {
-		helper->results = g_object_ref (G_OBJECT(results));
+		helper->results = g_object_ref (results);
 		g_object_unref (results);
 	}
 	g_main_loop_quit (helper->loop);
@@ -57,21 +57,21 @@ pk_client_generic_finish_sync (PkClient *client, GAsyncResult *res, PkClientHelp
 /**
  * pk_client_resolve:
  * @client: a valid #PkClient instance
- * @filters: a %PkBitfield such as %PK_FILTER_ENUM_GUI | %PK_FILTER_ENUM_FREE or %PK_FILTER_ENUM_NONE
+ * @filters: a #PkBitfield such as %PK_FILTER_ENUM_GUI | %PK_FILTER_ENUM_FREE or %PK_FILTER_ENUM_NONE
  * @packages: (array zero-terminated=1): an array of package names to resolve, e.g. "gnome-system-tools"
  * @cancellable: a #GCancellable or %NULL
  * @progress_callback: (scope call): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
  * @error: the #GError to store any failure, or %NULL
  *
- * Resolve a package name into a %package_id. This can return installed and
+ * Resolve a package name into a @package_id. This can return installed and
  * available packages and allows you find out if a package is installed locally
  * or is available in a repository.
  *
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.3
  **/
@@ -113,7 +113,7 @@ pk_client_resolve (PkClient *client, PkBitfield filters, gchar **packages, GCanc
 /**
  * pk_client_search_names:
  * @client: a valid #PkClient instance
- * @filters: a %PkBitfield such as %PK_FILTER_ENUM_GUI | %PK_FILTER_ENUM_FREE or %PK_FILTER_ENUM_NONE
+ * @filters: a #PkBitfield such as %PK_FILTER_ENUM_GUI | %PK_FILTER_ENUM_FREE or %PK_FILTER_ENUM_NONE
  * @values: (array zero-terminated=1): free text to search for, for instance, "power"
  * @cancellable: a #GCancellable or %NULL
  * @progress_callback: (scope call): the function to run when the progress changes
@@ -126,7 +126,7 @@ pk_client_resolve (PkClient *client, PkBitfield filters, gchar **packages, GCanc
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.5
  **/
@@ -168,7 +168,7 @@ pk_client_search_names (PkClient *client, PkBitfield filters, gchar **values, GC
 /**
  * pk_client_search_details:
  * @client: a valid #PkClient instance
- * @filters: a %PkBitfield such as %PK_FILTER_ENUM_GUI | %PK_FILTER_ENUM_FREE or %PK_FILTER_ENUM_NONE
+ * @filters: a #PkBitfield such as %PK_FILTER_ENUM_GUI | %PK_FILTER_ENUM_FREE or %PK_FILTER_ENUM_NONE
  * @values: (array zero-terminated=1): free text to search for, for instance, "power"
  * @cancellable: a #GCancellable or %NULL
  * @progress_callback: (scope call): the function to run when the progress changes
@@ -182,7 +182,7 @@ pk_client_search_names (PkClient *client, PkBitfield filters, gchar **values, GC
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.5
  **/
@@ -224,7 +224,7 @@ pk_client_search_details (PkClient *client, PkBitfield filters, gchar **values, 
 /**
  * pk_client_search_groups:
  * @client: a valid #PkClient instance
- * @filters: a %PkBitfield such as %PK_FILTER_ENUM_GUI | %PK_FILTER_ENUM_FREE or %PK_FILTER_ENUM_NONE
+ * @filters: a #PkBitfield such as %PK_FILTER_ENUM_GUI | %PK_FILTER_ENUM_FREE or %PK_FILTER_ENUM_NONE
  * @values: (array zero-terminated=1): a group enum to search for, for instance, "system-tools"
  * @cancellable: a #GCancellable or %NULL
  * @progress_callback: (scope call): the function to run when the progress changes
@@ -236,7 +236,7 @@ pk_client_search_details (PkClient *client, PkBitfield filters, gchar **values, 
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.5
  **/
@@ -278,7 +278,7 @@ pk_client_search_groups (PkClient *client, PkBitfield filters, gchar **values, G
 /**
  * pk_client_search_files:
  * @client: a valid #PkClient instance
- * @filters: a %PkBitfield such as %PK_FILTER_ENUM_GUI | %PK_FILTER_ENUM_FREE or %PK_FILTER_ENUM_NONE
+ * @filters: a #PkBitfield such as %PK_FILTER_ENUM_GUI | %PK_FILTER_ENUM_FREE or %PK_FILTER_ENUM_NONE
  * @values: (array zero-terminated=1): file to search for, for instance, "/sbin/service"
  * @cancellable: a #GCancellable or %NULL
  * @progress_callback: (scope call): the function to run when the progress changes
@@ -290,7 +290,7 @@ pk_client_search_groups (PkClient *client, PkBitfield filters, gchar **values, G
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.5
  **/
@@ -344,7 +344,7 @@ pk_client_search_files (PkClient *client, PkBitfield filters, gchar **values, GC
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.3
  **/
@@ -398,7 +398,7 @@ pk_client_get_details (PkClient *client, gchar **package_ids, GCancellable *canc
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.8.17
  **/
@@ -454,7 +454,7 @@ pk_client_get_details_local (PkClient *client, gchar **files, GCancellable *canc
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.9.1
  **/
@@ -510,7 +510,7 @@ pk_client_get_files_local (PkClient *client, gchar **files, GCancellable *cancel
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.3
  **/
@@ -564,7 +564,7 @@ pk_client_get_update_detail (PkClient *client, gchar **package_ids, GCancellable
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.3
  **/
@@ -606,7 +606,7 @@ pk_client_download_packages (PkClient *client, gchar **package_ids, const gchar 
 /**
  * pk_client_get_updates:
  * @client: a valid #PkClient instance
- * @filters: a %PkBitfield such as %PK_FILTER_ENUM_DEVEL or %PK_FILTER_ENUM_NONE
+ * @filters: a #PkBitfield such as %PK_FILTER_ENUM_DEVELOPMENT or %PK_FILTER_ENUM_NONE
  * @cancellable: a #GCancellable or %NULL
  * @progress_callback: (scope call): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
@@ -617,7 +617,7 @@ pk_client_download_packages (PkClient *client, gchar **package_ids, const gchar 
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.3
  **/
@@ -670,7 +670,7 @@ pk_client_get_updates (PkClient *client, PkBitfield filters, GCancellable *cance
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.3
  **/
@@ -712,7 +712,7 @@ pk_client_get_old_transactions (PkClient *client, guint number, GCancellable *ca
 /**
  * pk_client_depends_on:
  * @client: a valid #PkClient instance
- * @filters: a %PkBitfield such as %PK_FILTER_ENUM_GUI | %PK_FILTER_ENUM_FREE or %PK_FILTER_ENUM_NONE
+ * @filters: a #PkBitfield such as %PK_FILTER_ENUM_GUI | %PK_FILTER_ENUM_FREE or %PK_FILTER_ENUM_NONE
  * @package_ids: (array zero-terminated=1): a null terminated array of package_id structures such as "hal;0.0.1;i386;fedora"
  * @recursive: If we should search recursively for depends
  * @cancellable: a #GCancellable or %NULL
@@ -725,7 +725,7 @@ pk_client_get_old_transactions (PkClient *client, guint number, GCancellable *ca
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.3
  **/
@@ -767,7 +767,7 @@ pk_client_depends_on (PkClient *client, PkBitfield filters, gchar **package_ids,
 /**
  * pk_client_get_packages:
  * @client: a valid #PkClient instance
- * @filters: a %PkBitfield such as %PK_FILTER_ENUM_GUI | %PK_FILTER_ENUM_FREE or %PK_FILTER_ENUM_NONE
+ * @filters: a #PkBitfield such as %PK_FILTER_ENUM_GUI | %PK_FILTER_ENUM_FREE or %PK_FILTER_ENUM_NONE
  * @cancellable: a #GCancellable or %NULL
  * @progress_callback: (scope call): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
@@ -778,7 +778,7 @@ pk_client_depends_on (PkClient *client, PkBitfield filters, gchar **package_ids,
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.3
  **/
@@ -820,7 +820,7 @@ pk_client_get_packages (PkClient *client, PkBitfield filters, GCancellable *canc
 /**
  * pk_client_required_by:
  * @client: a valid #PkClient instance
- * @filters: a %PkBitfield such as %PK_FILTER_ENUM_GUI | %PK_FILTER_ENUM_FREE or %PK_FILTER_ENUM_NONE
+ * @filters: a #PkBitfield such as %PK_FILTER_ENUM_GUI | %PK_FILTER_ENUM_FREE or %PK_FILTER_ENUM_NONE
  * @package_ids: (array zero-terminated=1): a null terminated array of package_id structures such as "hal;0.0.1;i386;fedora"
  * @recursive: If we should search recursively for requires
  * @cancellable: a #GCancellable or %NULL
@@ -833,7 +833,7 @@ pk_client_get_packages (PkClient *client, PkBitfield filters, GCancellable *canc
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.3
  **/
@@ -875,7 +875,7 @@ pk_client_required_by (PkClient *client, PkBitfield filters, gchar **package_ids
 /**
  * pk_client_what_provides:
  * @client: a valid #PkClient instance
- * @filters: a %PkBitfield such as %PK_FILTER_ENUM_GUI | %PK_FILTER_ENUM_FREE or %PK_FILTER_ENUM_NONE
+ * @filters: a #PkBitfield such as %PK_FILTER_ENUM_GUI | %PK_FILTER_ENUM_FREE or %PK_FILTER_ENUM_NONE
  * @values: (array zero-terminated=1): a search term such as "sound/mp3"
  * @cancellable: a #GCancellable or %NULL
  * @progress_callback: (scope call): the function to run when the progress changes
@@ -889,7 +889,7 @@ pk_client_required_by (PkClient *client, PkBitfield filters, gchar **package_ids
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.3
  **/
@@ -945,7 +945,7 @@ pk_client_what_provides (PkClient *client,
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.3
  **/
@@ -998,7 +998,7 @@ pk_client_get_distro_upgrades (PkClient *client, GCancellable *cancellable,
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.3
  **/
@@ -1050,7 +1050,7 @@ pk_client_get_files (PkClient *client, gchar **package_ids, GCancellable *cancel
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.3
  **/
@@ -1069,6 +1069,8 @@ pk_client_get_categories (PkClient *client, GCancellable *cancellable,
 	helper.context = g_main_context_new ();
 	helper.loop = g_main_loop_new (helper.context, FALSE);
 	helper.error = error;
+
+	g_main_context_push_thread_default (helper.context);
 
 	/* run async method */
 	pk_client_get_categories_async (client, cancellable, progress_callback, progress_user_data,
@@ -1100,13 +1102,13 @@ pk_client_get_categories (PkClient *client, GCancellable *cancellable,
  * @error: the #GError to store any failure, or %NULL
  *
  * Remove a package (optionally with dependancies) from the system.
- * If %allow_deps is set to %FALSE, and other packages would have to be removed,
+ * If @allow_deps is set to %FALSE, and other packages would have to be removed,
  * then the transaction would fail.
  *
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.8.1
  **/
@@ -1177,7 +1179,7 @@ pk_client_remove_packages (PkClient *client,
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.3
  **/
@@ -1231,7 +1233,7 @@ pk_client_refresh_cache (PkClient *client, gboolean force, GCancellable *cancell
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.8.1
  **/
@@ -1286,12 +1288,12 @@ pk_client_install_packages (PkClient *client,
  * @progress_user_data: data to pass to @progress_callback
  * @error: the #GError to store any failure, or %NULL
  *
- * Install a software source signature of the newest and most correct version.
+ * Install a software repository signature of the newest and most correct version.
  *
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.3
  **/
@@ -1345,7 +1347,7 @@ pk_client_install_signature (PkClient *client, PkSigTypeEnum type, const gchar *
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.8.1
  **/
@@ -1405,7 +1407,7 @@ pk_client_update_packages (PkClient *client,
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.8.1
  **/
@@ -1440,6 +1442,8 @@ pk_client_install_files (PkClient *client,
 
 	results = helper.results;
 
+	g_main_context_pop_thread_default (helper.context);
+
 	/* free temp object */
 	g_main_loop_unref (helper.loop);
 	g_main_context_unref (helper.context);
@@ -1461,7 +1465,7 @@ pk_client_install_files (PkClient *client,
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.3
  **/
@@ -1503,7 +1507,7 @@ pk_client_accept_eula (PkClient *client, const gchar *eula_id, GCancellable *can
 /**
  * pk_client_get_repo_list:
  * @client: a valid #PkClient instance
- * @filters: a %PkBitfield such as %PK_FILTER_ENUM_DEVEL or %PK_FILTER_ENUM_NONE
+ * @filters: a #PkBitfield such as %PK_FILTER_ENUM_DEVELOPMENT or %PK_FILTER_ENUM_NONE
  * @cancellable: a #GCancellable or %NULL
  * @progress_callback: (scope call): the function to run when the progress changes
  * @progress_user_data: data to pass to @progress_callback
@@ -1514,7 +1518,7 @@ pk_client_accept_eula (PkClient *client, const gchar *eula_id, GCancellable *can
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.3
  **/
@@ -1568,7 +1572,7 @@ pk_client_get_repo_list (PkClient *client, PkBitfield filters, GCancellable *can
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.3
  **/
@@ -1624,7 +1628,7 @@ pk_client_repo_enable (PkClient *client, const gchar *repo_id, gboolean enabled,
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.3
  **/
@@ -1679,7 +1683,7 @@ pk_client_repo_set_data (PkClient *client, const gchar *repo_id, const gchar *pa
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.9.1
  **/
@@ -1733,7 +1737,9 @@ pk_client_repo_remove (PkClient *client,
 
 /**
  * pk_client_upgrade_system:
+ * @client: a valid #PkClient instance
  * @distro_id: a distro ID such as "fedora-14"
+ * @transaction_flags: transaction flags
  * @upgrade_kind: a #PkUpgradeKindEnum such as %PK_UPGRADE_KIND_ENUM_COMPLETE
  * @cancellable: a #GCancellable or %NULL
  * @progress_callback: (scope call): the function to run when the progress changes
@@ -1749,7 +1755,7 @@ pk_client_repo_remove (PkClient *client,
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 1.0.10
  **/
@@ -1793,6 +1799,7 @@ pk_client_upgrade_system (PkClient *client, PkBitfield transaction_flags,
 
 /**
  * pk_client_repair_system:
+ * @client: a valid #PkClient instance
  * @transaction_flags: if only trusted packages should be installed
  * @cancellable: a #GCancellable or %NULL
  * @progress_callback: (scope call): the function to run when the progress changes
@@ -1809,7 +1816,7 @@ pk_client_upgrade_system (PkClient *client, PkBitfield transaction_flags,
  * Warning: this function is synchronous, and may block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.8.1
  **/
@@ -1871,7 +1878,7 @@ pk_client_repair_system (PkClient *client,
  * Warning: this function is synchronous, and will block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.3
  **/
@@ -1910,7 +1917,7 @@ pk_client_adopt (PkClient *client, const gchar *transaction_id, GCancellable *ca
 	return results;
 }
 
-/**
+/*
  * pk_client_get_progress_finish_sync:
  **/
 static void
@@ -1919,7 +1926,7 @@ pk_client_get_progress_finish_sync (PkClient *client, GAsyncResult *res, PkClien
 	PkProgress *progress;
 	progress = pk_client_get_progress_finish (client, res, helper->error);
 	if (progress != NULL) {
-		helper->progress = g_object_ref (G_OBJECT(progress));
+		helper->progress = g_object_ref (progress);
 		g_object_unref (progress);
 	}
 	g_main_loop_quit (helper->loop);
@@ -1937,7 +1944,7 @@ pk_client_get_progress_finish_sync (PkClient *client, GAsyncResult *res, PkClien
  * Warning: this function is synchronous, and will block. Do not use it in GUI
  * applications.
  *
- * Return value: (transfer full): a %PkResults object, or NULL for error
+ * Return value: (transfer full): a #PkResults object, or %NULL for error
  *
  * Since: 0.5.3
  **/

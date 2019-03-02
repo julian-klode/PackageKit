@@ -42,7 +42,6 @@
 
 #include "pk-shared.h"
 
-#include "pk-cleanup.h"
 #include "pk-transaction-db.h"
 
 static void     pk_transaction_db_finalize	(GObject        *object);
@@ -213,8 +212,8 @@ pk_transaction_db_action_time_since (PkTransactionDb *tdb, PkRoleEnum role)
 	gchar *error_msg = NULL;
 	gint rc;
 	const gchar *role_text;
-	_cleanup_free_ gchar *statement = NULL;
-	_cleanup_free_ gchar *timespec = NULL;
+	g_autofree gchar *statement = NULL;
+	g_autofree gchar *timespec = NULL;
 
 	g_return_val_if_fail (PK_IS_TRANSACTION_DB (tdb), 0);
 	g_return_val_if_fail (tdb->priv->db != NULL, 0);
@@ -246,8 +245,8 @@ pk_transaction_db_action_time_reset (PkTransactionDb *tdb, PkRoleEnum role)
 	gint rc;
 	const gchar *role_text;
 	guint since;
-	_cleanup_free_ gchar *statement = NULL;
-	_cleanup_free_ gchar *timespec = NULL;
+	g_autofree gchar *statement = NULL;
+	g_autofree gchar *timespec = NULL;
 
 	g_return_val_if_fail (PK_IS_TRANSACTION_DB (tdb), FALSE);
 	g_return_val_if_fail (tdb->priv->db != NULL, FALSE);
@@ -282,7 +281,7 @@ pk_transaction_db_get_list (PkTransactionDb *tdb, guint limit)
 	gchar *error_msg = NULL;
 	gint rc;
 	GList *list = NULL;
-	_cleanup_free_ gchar *statement = NULL;
+	g_autofree gchar *statement = NULL;
 
 	g_return_val_if_fail (PK_IS_TRANSACTION_DB (tdb), NULL);
 
@@ -313,8 +312,8 @@ out:
 gboolean
 pk_transaction_db_add (PkTransactionDb *tdb, const gchar *tid)
 {
-	_cleanup_free_ gchar *timespec = NULL;
-	_cleanup_free_ gchar *statement = NULL;
+	g_autofree gchar *timespec = NULL;
+	g_autofree gchar *statement = NULL;
 
 	g_return_val_if_fail (PK_IS_TRANSACTION_DB (tdb), FALSE);
 
@@ -331,7 +330,7 @@ gboolean
 pk_transaction_db_set_role (PkTransactionDb *tdb, const gchar *tid, PkRoleEnum role)
 {
 	const gchar *role_text;
-	_cleanup_free_ gchar *statement = NULL;
+	g_autofree gchar *statement = NULL;
 
 	g_return_val_if_fail (PK_IS_TRANSACTION_DB (tdb), FALSE);
 
@@ -347,7 +346,7 @@ pk_transaction_db_set_role (PkTransactionDb *tdb, const gchar *tid, PkRoleEnum r
 gboolean
 pk_transaction_db_set_uid (PkTransactionDb *tdb, const gchar *tid, guint uid)
 {
-	_cleanup_free_ gchar *statement = NULL;
+	g_autofree gchar *statement = NULL;
 
 	g_return_val_if_fail (PK_IS_TRANSACTION_DB (tdb), FALSE);
 
@@ -362,7 +361,7 @@ pk_transaction_db_set_uid (PkTransactionDb *tdb, const gchar *tid, guint uid)
 gboolean
 pk_transaction_db_set_cmdline (PkTransactionDb *tdb, const gchar *tid, const gchar *cmdline)
 {
-	_cleanup_free_ gchar *statement = NULL;
+	g_autofree gchar *statement = NULL;
 
 	g_return_val_if_fail (PK_IS_TRANSACTION_DB (tdb), FALSE);
 
@@ -377,7 +376,7 @@ pk_transaction_db_set_cmdline (PkTransactionDb *tdb, const gchar *tid, const gch
 gboolean
 pk_transaction_db_set_data (PkTransactionDb *tdb, const gchar *tid, const gchar *data)
 {
-	_cleanup_free_ gchar *statement = NULL;
+	g_autofree gchar *statement = NULL;
 
 	g_return_val_if_fail (PK_IS_TRANSACTION_DB (tdb), FALSE);
 
@@ -396,7 +395,7 @@ pk_transaction_db_set_data (PkTransactionDb *tdb, const gchar *tid, const gchar 
 gboolean
 pk_transaction_db_set_finished (PkTransactionDb *tdb, const gchar *tid, gboolean success, guint runtime)
 {
-	_cleanup_free_ gchar *statement = NULL;
+	g_autofree gchar *statement = NULL;
 
 	g_return_val_if_fail (PK_IS_TRANSACTION_DB (tdb), FALSE);
 
@@ -485,7 +484,7 @@ pk_transaction_db_defer_write_job_count_cb (PkTransactionDb *tdb)
 {
 	gchar *error_msg = NULL;
 	gint rc;
-	_cleanup_free_ gchar *statement = NULL;
+	g_autofree gchar *statement = NULL;
 
 	/* not loaded! */
 	if (tdb->priv->db == NULL) {
@@ -520,7 +519,7 @@ gchar *
 pk_transaction_db_generate_id (PkTransactionDb *tdb)
 {
 	gchar *tid = NULL;
-	_cleanup_free_ gchar *rand_str = NULL;
+	g_autofree gchar *rand_str = NULL;
 
 	/* increment */
 	tdb->priv->job_count++;
@@ -596,6 +595,42 @@ pk_transaction_db_proxy_item_free (PkTransactionDbProxyItem *item)
 }
 
 /**
+ * pk_transaction_db_is_proxy_set:
+ **/
+static gboolean
+pk_transaction_db_is_proxy_set (PkTransactionDb *tdb, guint uid, const gchar *session)
+{
+	gchar *error_msg = NULL;
+	gboolean ret = FALSE;
+	gint rc;
+	PkTransactionDbProxyItem *item;
+	g_autofree gchar *statement = NULL;
+
+	g_return_val_if_fail (PK_IS_TRANSACTION_DB (tdb), FALSE);
+	g_return_val_if_fail (uid != G_MAXUINT, FALSE);
+
+	/* get existing data */
+	item = g_new0 (PkTransactionDbProxyItem, 1);
+	statement = g_strdup_printf ("SELECT proxy_http, proxy_https, proxy_ftp, proxy_socks, no_proxy, pac FROM proxy WHERE uid = '%i' AND session = '%s' LIMIT 1",
+				     uid, session);
+	rc = sqlite3_exec (tdb->priv->db, statement,
+			   pk_transaction_sqlite_proxy_cb,
+			   item,
+			   &error_msg);
+	if (rc != SQLITE_OK) {
+		g_warning ("SQL error: %s", error_msg);
+		sqlite3_free (error_msg);
+		goto out;
+	}
+
+	ret = item->set;
+
+out:
+	pk_transaction_db_proxy_item_free (item);
+	return ret;
+}
+
+/**
  * pk_transaction_db_get_proxy:
  * @tdb: the #PkTransactionDb instance
  * @uid: the user ID of the user
@@ -620,7 +655,7 @@ pk_transaction_db_get_proxy (PkTransactionDb *tdb, guint uid, const gchar *sessi
 	gboolean ret = FALSE;
 	gint rc;
 	PkTransactionDbProxyItem *item;
-	_cleanup_free_ gchar *statement = NULL;
+	g_autofree gchar *statement = NULL;
 
 	g_return_val_if_fail (PK_IS_TRANSACTION_DB (tdb), FALSE);
 	g_return_val_if_fail (uid != G_MAXUINT, FALSE);
@@ -690,20 +725,14 @@ pk_transaction_db_set_proxy (PkTransactionDb *tdb, guint uid,
 	gboolean ret = FALSE;
 	gint rc;
 	sqlite3_stmt *statement = NULL;
-	_cleanup_free_ gchar *timespec = NULL;
-	_cleanup_free_ gchar *proxy_http_tmp = NULL;
+	g_autofree gchar *timespec = NULL;
+	g_autofree gchar *proxy_http_tmp = NULL;
 
 	g_return_val_if_fail (PK_IS_TRANSACTION_DB (tdb), FALSE);
 	g_return_val_if_fail (uid != G_MAXUINT, FALSE);
 
 	/* check for previous entries */
-	ret = pk_transaction_db_get_proxy (tdb, uid, session,
-					   &proxy_http_tmp,
-					   NULL,
-					   NULL,
-					   NULL,
-					   NULL,
-					   NULL);
+	ret = pk_transaction_db_is_proxy_set (tdb, uid, session);
 	if (ret) {
 		g_debug ("updated proxy %s, %s for uid:%i and session:%s",
 			 proxy_http, proxy_ftp, uid, session);
@@ -806,7 +835,7 @@ pk_transaction_db_class_init (PkTransactionDbClass *klass)
 static void
 pk_transaction_db_ensure_file_directory (const gchar *path)
 {
-	_cleanup_free_ gchar *parent = NULL;
+	g_autofree gchar *parent = NULL;
 	parent = g_path_get_dirname (path);
 	if (g_mkdir_with_parents (parent, 0755) == -1)
 		g_warning ("%s", g_strerror (errno));
@@ -863,6 +892,7 @@ pk_transaction_db_load (PkTransactionDb *tdb, GError **error)
 			     "Can't open transaction database: %s",
 			     sqlite3_errmsg (tdb->priv->db));
 		sqlite3_close (tdb->priv->db);
+		tdb->priv->db = NULL;
 		return FALSE;
 	}
 
